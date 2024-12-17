@@ -91,6 +91,7 @@ export default function Home() {
                   <Viewer
                     book={book}
                     currentLocation={currentLocation}
+                    navigation={navigation}
                   />
                 )}
               </div>

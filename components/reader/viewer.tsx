@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from 'react';
-import ePub, { Book, Rendition } from 'epubjs';
+import ePub, { Book, Rendition, NavItem } from 'epubjs';
+import { findNavItemByHref, encodeLocation, decodeLocation } from '@/lib/navigation';
 
 interface ViewerProps {
   book: Book;
   currentLocation?: string;
+  navigation: NavItem[];
 }
 
-export function Viewer({ book, currentLocation }: ViewerProps) {
+export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
   const displayPromiseRef = useRef<Promise<any> | null>(null);
@@ -18,10 +20,8 @@ export function Viewer({ book, currentLocation }: ViewerProps) {
         height: '100%',
         spread: 'none',
         flow: 'scrolled-doc',
-        // manager: 'continuous'
       });
 
-      // Add typography styles
       renditionRef.current.themes.default({
         'body': {
           'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -32,12 +32,41 @@ export function Viewer({ book, currentLocation }: ViewerProps) {
         }
       });
 
-      displayPromiseRef.current = renditionRef.current.display();
+      // Get initial location from hash, handling both encoded chapter names and raw hrefs
+      const initialHash = window.location.hash.slice(1);
+      const initialLocation = initialHash ? decodeLocation(navigation, initialHash) : undefined;
+      displayPromiseRef.current = renditionRef.current.display(initialLocation);
+
+      // Handle location changes
+      renditionRef.current.on('relocated', (location: {
+        start: { href: string };
+        end: { href: string };
+      }) => {
+        const href = location.start.href;
+        if (href) {
+          const navItem = findNavItemByHref(navigation, href);
+          const hash = encodeLocation(navItem, href);
+          window.history.replaceState(null, '', `#${hash}`);
+        }
+      });
+
+      // Handle browser back/forward
+      const handlePopState = () => {
+        const hash = window.location.hash.slice(1);
+        if (hash && renditionRef.current) {
+          const href = decodeLocation(navigation, hash);
+          renditionRef.current.display(href);
+        }
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
     }
 
     return () => {
       if (renditionRef.current) {
-        // Wait for display to finish before destroying
         displayPromiseRef.current!.then(() => {
           if (renditionRef.current) {
             renditionRef.current.destroy();
@@ -45,7 +74,7 @@ export function Viewer({ book, currentLocation }: ViewerProps) {
         });
       }
     };
-  }, [book]);
+  }, [book, navigation]);
 
   useEffect(() => {
     if (currentLocation && renditionRef.current) {
