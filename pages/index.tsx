@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import ePub, { Book, NavItem } from 'epubjs';
 import { Dropzone } from '@/components/ui/dropzone';
@@ -10,10 +10,30 @@ export default function Home() {
   const [navigation, setNavigation] = useState<NavItem[]>([]);
   const [currentLocation, setCurrentLocation] = useState<string>();
 
+  useEffect(() => {
+    // Try to load the last opened file from localStorage
+    const lastFile = localStorage.getItem('lastEpubFile');
+    if (lastFile) {
+      const arrayBuffer = new Uint8Array(JSON.parse(lastFile)).buffer;
+      const newBook = ePub(arrayBuffer);
+      newBook.ready.then(() => {
+        setNavigation(newBook.navigation.toc);
+        setBook(newBook);
+      }).catch((error) => {
+        console.error('Error loading EPUB from localStorage:', error);
+        localStorage.removeItem('lastEpubFile');
+      });
+    }
+  }, []);
+
   const handleFileAccepted = (file: File) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
       if (e.target?.result) {
+        // Save the file to localStorage
+        const arrayBuffer = e.target.result as ArrayBuffer;
+        localStorage.setItem('lastEpubFile', JSON.stringify(Array.from(new Uint8Array(arrayBuffer))));
+
         const newBook = ePub(e.target.result);
         try {
           await newBook.ready;
@@ -44,6 +64,18 @@ export default function Home() {
           <div className="flex h-screen">
             {/* Left sidebar - Table of Contents */}
             <div className="w-64 border-r bg-white overflow-y-auto hidden md:block">
+              <div className="p-4 border-b">
+                <button
+                  onClick={() => {
+                    setBook(null);
+                    setNavigation([]);
+                    localStorage.removeItem('lastEpubFile');
+                  }}
+                  className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                >
+                  Close Book
+                </button>
+              </div>
               {navigation && (
                 <Outline
                   toc={navigation}
