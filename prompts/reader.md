@@ -1,0 +1,10 @@
+- play with windsurf
+	- framework
+		- next.js
+		- shadcn
+		- tailwind
+	- use bun.js
+	- build epub reader
+	- drag and drop the epub file
+	- display outline on the left
+	- display select chapter on the right
