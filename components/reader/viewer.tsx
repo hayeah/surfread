@@ -16,8 +16,22 @@ export function Viewer({ book, currentLocation }: ViewerProps) {
       renditionRef.current = book.renderTo(viewerRef.current, {
         width: '100%',
         height: '100%',
-        spread: 'none'
+        spread: 'none',
+        flow: 'scrolled-doc',
+        // manager: 'continuous'
       });
+
+      // Add typography styles
+      renditionRef.current.themes.default({
+        'body': {
+          'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          'font-size': '16px',
+          'line-height': '1.6',
+          'margin': '0 auto',
+          'padding': '0 1rem'
+        }
+      });
+
       displayPromiseRef.current = renditionRef.current.display();
     }
 

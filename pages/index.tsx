@@ -42,7 +42,8 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex h-screen">
-            <div className="w-64 border-r bg-white overflow-y-auto">
+            {/* Left sidebar - Table of Contents */}
+            <div className="w-64 border-r bg-white overflow-y-auto hidden md:block">
               {navigation && (
                 <Outline
                   toc={navigation}
@@ -50,8 +51,34 @@ export default function Home() {
                 />
               )}
             </div>
-            <div className="flex-1 overflow-hidden">
-              <Viewer book={book} currentLocation={currentLocation} />
+
+            {/* Main content - centered with max width */}
+            <div className="flex-1 flex justify-center bg-gray-50">
+              <div className="max-w-[600px] w-full relative">
+                {book && (
+                  <Viewer
+                    book={book}
+                    currentLocation={currentLocation}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Right toolbar - only visible on large screens */}
+            <div className="w-64 border-l bg-white overflow-y-auto hidden lg:block">
+              <div className="p-4">
+                <h3 className="font-medium mb-4">Tools</h3>
+                {/* Add toolbar buttons/controls here */}
+                <button className="w-full mb-2 px-4 py-2 text-left hover:bg-gray-100 rounded">
+                  Font Size
+                </button>
+                <button className="w-full mb-2 px-4 py-2 text-left hover:bg-gray-100 rounded">
+                  Theme
+                </button>
+                <button className="w-full mb-2 px-4 py-2 text-left hover:bg-gray-100 rounded">
+                  Search
+                </button>
+              </div>
             </div>
           </div>
         )}
