@@ -33,11 +33,11 @@ export function Viewer({ book, currentLocation }: ViewerProps) {
     };
   }, [book]);
 
-  // useEffect(() => {
-  //   if (currentLocation && renditionRef.current) {
-  //     renditionRef.current.display(currentLocation);
-  //   }
-  // }, [currentLocation]);
+  useEffect(() => {
+    if (currentLocation && renditionRef.current) {
+      renditionRef.current.display(currentLocation);
+    }
+  }, [currentLocation]);
 
   return (
     <div ref={viewerRef} className="w-full h-full bg-white" />

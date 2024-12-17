@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import ePub, { Book } from 'epubjs';
+import ePub, { Book, NavItem } from 'epubjs';
 import { Dropzone } from '@/components/ui/dropzone';
 import { Outline } from '@/components/reader/outline';
 import { Viewer } from '@/components/reader/viewer';
 
 export default function Home() {
   const [book, setBook] = useState<Book | null>(null);
-  const [navigation, setNavigation] = useState<any>(null);
+  const [navigation, setNavigation] = useState<NavItem[]>([]);
   const [currentLocation, setCurrentLocation] = useState<string>();
 
   const handleFileAccepted = (file: File) => {
@@ -17,8 +17,7 @@ export default function Home() {
         const newBook = ePub(e.target.result);
         try {
           await newBook.ready;
-          // const nav = await newBook.navigation.load();
-          // setNavigation(nav);
+          setNavigation(newBook.navigation.toc);
           setBook(newBook);
         } catch (error) {
           console.error('Error loading EPUB:', error);

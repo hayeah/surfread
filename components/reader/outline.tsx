@@ -1,8 +1,8 @@
 import React from 'react';
-import Navigation from 'epubjs/types/navigation';
+import { NavItem } from 'epubjs';
 
 interface OutlineProps {
-  toc: Navigation;
+  toc: NavItem[];
   onChapterSelect: (href: string) => void;
 }
 
@@ -11,7 +11,7 @@ export function Outline({ toc, onChapterSelect }: OutlineProps) {
     <div className="p-4">
       <h2 className="text-lg font-semibold mb-4">Table of Contents</h2>
       <nav>
-        {toc.toc.map((chapter, index) => (
+        {toc.map((chapter, index) => (
           <button
             key={index}
             onClick={() => onChapterSelect(chapter.href)}
