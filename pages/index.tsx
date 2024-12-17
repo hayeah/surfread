@@ -9,6 +9,7 @@ export default function Home() {
   const [book, setBook] = useState<Book | null>(null);
   const [navigation, setNavigation] = useState<NavItem[]>([]);
   const [currentLocation, setCurrentLocation] = useState<string>();
+  const [scrollPosition, setScrollPosition] = useState<number>(0);
 
   useEffect(() => {
     // Try to load the last opened file from localStorage
@@ -92,6 +93,7 @@ export default function Home() {
                     book={book}
                     currentLocation={currentLocation}
                     navigation={navigation}
+                    onScrollPositionChange={setScrollPosition}
                   />
                 )}
               </div>
@@ -100,6 +102,9 @@ export default function Home() {
             {/* Right toolbar - only visible on large screens */}
             <div className="w-64 border-l bg-white overflow-y-auto hidden lg:block">
               <div className="p-4">
+                <div className="text-sm text-gray-600">
+                  Scroll Position: {Math.round(scrollPosition)}px
+                </div>
                 <h3 className="font-medium mb-4">Tools</h3>
                 {/* Add toolbar buttons/controls here */}
                 <button className="w-full mb-2 px-4 py-2 text-left hover:bg-gray-100 rounded">
