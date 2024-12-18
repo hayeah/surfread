@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest",
+    "unzipEpub": "bun src/cli/unzipEpub.ts"
   },
   "dependencies": {
     "@shadcn/ui": "^0.0.4",
@@ -27,5 +29,12 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss": "^3.4.16",
     "typescript": "5.7.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/yauzl": "^2.10.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "yauzl": "^3.2.0"
   }
 }
