@@ -213,58 +213,44 @@ export class EPubParser {
     }));
   }
 
-  async toc(): Promise<EPubTocItem[]> {
-    if (!this.zip) {
-      throw new Error('EPub file not loaded. Call load() first.');
+  private async tocEPUB3(navItem: EPubManifestItem): Promise<EPubTocItem[]> {
+    const navPath = await this.resolveFromOpf(navItem.href);
+    const navFile = this.zip?.file(navPath);
+    
+    if (!navFile) {
+      throw new Error('Invalid epub: nav document not found');
     }
 
-    const manifest = await this.manifest();
+    const navContent = await navFile.async('text');
+    const navData = this.xmlParser.parse(navContent);
 
-    // Try EPUB3 nav first
-    const navItem = manifest.find(item => item.properties?.includes('nav'));
-    
-    if (navItem) {
-      const navPath = await this.resolveFromOpf(navItem.href);
-      const navFile = this.zip.file(navPath);
-      
-      if (!navFile) {
-        throw new Error('Invalid epub: nav document not found');
-      }
+    // Find the nav element with epub:type="toc"
+    const nav = navData.html?.body?.section?.nav;
+    // Check if this nav element has epub:type containing "toc"
+    const isTocNav = nav?.['epub:type']?.includes('toc');
 
-      const navContent = await navFile.async('text');
-      const navData = this.xmlParser.parse(navContent);
+    if (!isTocNav || !nav?.ol?.li) {
+      throw new Error('Invalid epub: nav document does not contain a valid table of contents');
+    }
 
-      // Find the nav element with epub:type="toc"
-      const nav = navData.html?.body?.section?.nav;
-      // Check if this nav element has epub:type containing "toc"
-      const isTocNav = nav?.['epub:type']?.includes('toc');
-
-      if (isTocNav && nav?.ol?.li) {
-        const parseNavItems = (items: any[]): EPubTocItem[] => {
-          return items.map((item: any) => {
-            const a = item.a;
-            return {
-              label: a['#text'] || '',
-              href: a.href || '',
-              subItems: item.ol?.li ? parseNavItems(Array.isArray(item.ol.li) ? item.ol.li : [item.ol.li]) : []
-            };
-          });
+    const parseNavItems = (items: any[]): EPubTocItem[] => {
+      return items.map((item: any) => {
+        const a = item.a;
+        return {
+          label: a['#text'] || '',
+          href: a.href || '',
+          subItems: item.ol?.li ? parseNavItems(Array.isArray(item.ol.li) ? item.ol.li : [item.ol.li]) : []
         };
+      });
+    };
 
-        const items = Array.isArray(nav.ol.li) ? nav.ol.li : [nav.ol.li];
-        return parseNavItems(items);
-      }
-    }
+    const items = Array.isArray(nav.ol.li) ? nav.ol.li : [nav.ol.li];
+    return parseNavItems(items);
+  }
 
-    // Fallback to EPUB2 NCX
-    const ncxItem = manifest.find(item => item.mediaType === 'application/x-dtbncx+xml');
-    
-    if (!ncxItem) {
-      throw new Error('Invalid epub: no table of contents found (neither nav nor NCX)');
-    }
-
+  private async tocNCX(ncxItem: EPubManifestItem): Promise<EPubTocItem[]> {
     const ncxPath = await this.resolveFromOpf(ncxItem.href);
-    const ncxFile = this.zip.file(ncxPath);
+    const ncxFile = this.zip?.file(ncxPath);
     
     if (!ncxFile) {
       throw new Error('Invalid epub: NCX document not found');
@@ -292,6 +278,28 @@ export class EPubParser {
 
     const navPoints = Array.isArray(navMap.navPoint) ? navMap.navPoint : [navMap.navPoint];
     return parseNavPoints(navPoints);
+  }
+
+  async toc(): Promise<EPubTocItem[]> {
+    if (!this.zip) {
+      throw new Error('EPub file not loaded. Call load() first.');
+    }
+
+    const manifest = await this.manifest();
+
+    // Check for EPUB3 nav
+    const navItem = manifest.find(item => item.properties?.includes('nav'));
+    if (navItem) {
+      return this.tocEPUB3(navItem);
+    }
+
+    // Check for NCX
+    const ncxItem = manifest.find(item => item.mediaType === 'application/x-dtbncx+xml');
+    if (ncxItem) {
+      return this.tocNCX(ncxItem);
+    }
+
+    throw new Error('Invalid epub: no table of contents found (neither nav nor NCX)');
   }
 
   async parse(): Promise<EPubData> {
