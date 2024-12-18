@@ -1,5 +1,4 @@
 import { EPubParser } from '../EPubParser';
-import fs from 'fs';
 import { compareOrUpdateFixture } from './testUtils';
 
 describe('EPubParser', () => {
