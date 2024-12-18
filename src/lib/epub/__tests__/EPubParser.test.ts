@@ -53,4 +53,12 @@ describe('EPubParser', () => {
       compareOrUpdateFixture('test/fixtures/alice-toc.json', toc);
     });
   });
+
+  describe('chapters()', () => {
+    it('should parse chapters from alice.epub', async () => {
+      const parser = await EPubParser.load('test/fixtures/alice.epub');
+      const chapters = await parser.chapters();
+      compareOrUpdateFixture('test/fixtures/alice-chapters.json', chapters);
+    });
+  });
 });

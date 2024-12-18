@@ -41,6 +41,8 @@ export interface EPubTocItem {
 
 export interface EPubChapter {
   id: string;
+  href: string;
+  title: string;
   content: string;
 }
 
@@ -282,19 +284,69 @@ export class EPubParser {
     throw new Error('Invalid epub: no table of contents found (neither nav nor NCX)');
   }
 
+  async chapters(): Promise<EPubChapter[]> {
+    const spine = await this.spine();
+    const manifest = await this.manifest();
+    const toc = await this.toc();
+
+    // Map spine items to chapters using manifest and toc information
+    const chapters = await Promise.all(spine.map(async (spineItem) => {
+      // Find corresponding manifest item
+      const manifestItem = manifest.find(item => item.id === spineItem.idref);
+      if (!manifestItem) {
+        throw new Error(`Invalid epub: spine item ${spineItem.idref} not found in manifest`);
+      }
+
+      // Find corresponding toc item
+      const tocItem = this.findTocItem(toc, manifestItem.href);
+
+      // Get chapter content
+      const chapterPath = await this.resolveFromOpf(manifestItem.href);
+      const chapterFile = this.zip.file(chapterPath);
+      if (!chapterFile) {
+        throw new Error(`Invalid epub: chapter file ${chapterPath} not found`);
+      }
+
+      const content = await chapterFile.async('text');
+      return {
+        id: manifestItem.id,
+        href: manifestItem.href,
+        title: tocItem?.label || '',
+        content
+      };
+    }));
+
+    return chapters;
+  }
+
+  private findTocItem(items: EPubTocItem[], href: string): EPubTocItem | undefined {
+    for (const item of items) {
+      if (item.href.endsWith(href)) {
+        return item;
+      }
+      if (item.subItems!.length > 0) {
+        const found = this.findTocItem(item.subItems!, href);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return undefined;
+  }
+
   async parse(): Promise<EPubData> {
     const metadata = await this.metadata();
     const manifest = await this.manifest();
     const spine = await this.spine();
     const toc = await this.toc();
+    const chapters = await this.chapters();
     
-    // TODO: Implement chapters parsing
     return {
       metadata,
       manifest,
       spine,
       toc,
-      chapters: [],
+      chapters,
     };
   }
 
