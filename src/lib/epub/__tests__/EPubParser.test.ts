@@ -1,5 +1,6 @@
 import { EPubParser } from '../EPubParser';
 import fs from 'fs';
+import { compareOrUpdateFixture } from './testUtils';
 
 describe('EPubParser', () => {
   describe('load()', () => {
@@ -34,13 +35,7 @@ describe('EPubParser', () => {
     it('should parse manifest from alice.epub', async () => {
       const parser = await EPubParser.load('test/fixtures/alice.epub');
       const manifest = await parser.manifest();
-
-      // write the manifest to a file
-      fs.writeFileSync('test/fixtures/alice-manifest.json', JSON.stringify(manifest, null, 2));
-      
-      // Load expected manifest from fixture
-      const expectedManifest = require('test/fixtures/alice-manifest.json');
-      expect(manifest).toEqual(expectedManifest);
+      compareOrUpdateFixture('test/fixtures/alice-manifest.json', manifest);
     });
   });
 
@@ -48,13 +43,7 @@ describe('EPubParser', () => {
     it('should parse spine from alice.epub', async () => {
       const parser = await EPubParser.load('test/fixtures/alice.epub');
       const spine = await parser.spine();
-
-      // write the spine to a file
-      fs.writeFileSync('test/fixtures/alice-spine.json', JSON.stringify(spine, null, 2));
-
-      // load expected spine from fixture
-      const expectedSpine = require('test/fixtures/alice-spine.json');
-      expect(spine).toEqual(expectedSpine);
+      compareOrUpdateFixture('test/fixtures/alice-spine.json', spine);
     });
   });
 
@@ -62,13 +51,7 @@ describe('EPubParser', () => {
     it('should parse table of contents from alice.epub', async () => {
       const parser = await EPubParser.load('test/fixtures/alice.epub');
       const toc = await parser.toc();
-
-      // write toc to a file
-      fs.writeFileSync('test/fixtures/alice-toc.json', JSON.stringify(toc, null, 2));
-
-      const expectedToc = require('test/fixtures/alice-toc.json');
-
-      expect(toc).toEqual(expectedToc);
+      compareOrUpdateFixture('test/fixtures/alice-toc.json', toc);
     });
   });
 });
