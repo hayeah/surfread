@@ -45,11 +45,11 @@ export interface EPubChapter {
 }
 
 export class EPubParser {
-  private rawZipData: Uint8Array | null = null;
-  private zip: JSZip | null = null;
+  private zip: JSZip;
   private xmlParser: XMLParser;
 
-  constructor(private filePath: string) {
+  constructor(zip: JSZip) {
+    this.zip = zip;
     this.xmlParser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: '',
@@ -57,22 +57,23 @@ export class EPubParser {
     });
   }
 
-  async load(): Promise<void> {
+  static async load(filePath: string): Promise<EPubParser> {
     try {
-      await fs.access(this.filePath);
-      this.rawZipData = await fs.readFile(this.filePath);
+      await fs.access(filePath);
+      const rawZipData = await fs.readFile(filePath);
       
       // Basic validation - check for epub magic numbers
       // EPub files should start with "PK\x03\x04"
-      if (!this.rawZipData || this.rawZipData.length < 4 || 
-          this.rawZipData[0] !== 0x50 || // P
-          this.rawZipData[1] !== 0x4B || // K
-          this.rawZipData[2] !== 0x03 || 
-          this.rawZipData[3] !== 0x04) {
+      if (!rawZipData || rawZipData.length < 4 || 
+          rawZipData[0] !== 0x50 || // P
+          rawZipData[1] !== 0x4B || // K
+          rawZipData[2] !== 0x03 || 
+          rawZipData[3] !== 0x04) {
         throw new Error('Invalid epub file');
       }
 
-      this.zip = await JSZip.loadAsync(this.rawZipData);
+      const zip = await JSZip.loadAsync(rawZipData);
+      return new EPubParser(zip);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         throw new Error('File not found');
@@ -82,10 +83,6 @@ export class EPubParser {
   }
 
   private async getContainerXml(): Promise<any> {
-    if (!this.zip) {
-      throw new Error('EPub file not loaded. Call load() first.');
-    }
-
     const containerFile = this.zip.file('META-INF/container.xml');
     if (!containerFile) {
       throw new Error('Invalid epub: missing container.xml');
@@ -113,10 +110,6 @@ export class EPubParser {
   }
 
   async metadata(): Promise<EPubMetadata> {
-    if (!this.zip) {
-      throw new Error('EPub file not loaded. Call load() first.');
-    }
-
     const opfPath = await this.getOpfPath();
     const opfFile = this.zip.file(opfPath);
     
@@ -154,10 +147,6 @@ export class EPubParser {
   }
 
   async manifest(): Promise<EPubManifestItem[]> {
-    if (!this.zip) {
-      throw new Error('EPub file not loaded. Call load() first.');
-    }
-
     const opfPath = await this.getOpfPath();
     const opfFile = this.zip.file(opfPath);
     
@@ -167,7 +156,6 @@ export class EPubParser {
 
     const opfContent = await opfFile.async('text');
     const opfData = this.xmlParser.parse(opfContent);
-    
     
     const manifest = opfData.package?.manifest;
 
@@ -186,10 +174,6 @@ export class EPubParser {
   }
 
   async spine(): Promise<EPubSpineItem[]> {
-    if (!this.zip) {
-      throw new Error('EPub file not loaded. Call load() first.');
-    }
-
     const opfPath = await this.getOpfPath();
     const opfFile = this.zip.file(opfPath);
     
@@ -281,10 +265,6 @@ export class EPubParser {
   }
 
   async toc(): Promise<EPubTocItem[]> {
-    if (!this.zip) {
-      throw new Error('EPub file not loaded. Call load() first.');
-    }
-
     const manifest = await this.manifest();
 
     // Check for EPUB3 nav
@@ -303,10 +283,6 @@ export class EPubParser {
   }
 
   async parse(): Promise<EPubData> {
-    if (!this.zip) {
-      throw new Error('EPub file not loaded. Call load() first.');
-    }
-
     const metadata = await this.metadata();
     const manifest = await this.manifest();
     const spine = await this.spine();

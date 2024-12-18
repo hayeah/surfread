@@ -4,20 +4,17 @@ import fs from 'fs';
 describe('EPubParser', () => {
   describe('load()', () => {
     it('should throw error if file does not exist', async () => {
-      const parser = new EPubParser('nonexistent.epub');
-      await expect(parser.load()).rejects.toThrow('File not found');
+      await expect(EPubParser.load('nonexistent.epub')).rejects.toThrow('File not found');
     });
 
     it('should throw error if file is not a valid epub', async () => {
-      const parser = new EPubParser('test/fixtures/invalid.epub');
-      await expect(parser.load()).rejects.toThrow('Invalid epub file');
+      await expect(EPubParser.load('test/fixtures/invalid.epub')).rejects.toThrow('Invalid epub file');
     });
   });
 
   describe('metadata()', () => {
     it('should parse metadata from alice.epub', async () => {
-      const parser = new EPubParser('test/fixtures/alice.epub');
-      await parser.load();
+      const parser = await EPubParser.load('test/fixtures/alice.epub');
       const metadata = await parser.metadata();
       
       expect(metadata).toEqual({
@@ -35,8 +32,7 @@ describe('EPubParser', () => {
 
   describe('manifest()', () => {
     it('should parse manifest from alice.epub', async () => {
-      const parser = new EPubParser('test/fixtures/alice.epub');
-      await parser.load();
+      const parser = await EPubParser.load('test/fixtures/alice.epub');
       const manifest = await parser.manifest();
 
       // write the manifest to a file
@@ -50,8 +46,7 @@ describe('EPubParser', () => {
 
   describe('spine()', () => {
     it('should parse spine from alice.epub', async () => {
-      const parser = new EPubParser('test/fixtures/alice.epub');
-      await parser.load();
+      const parser = await EPubParser.load('test/fixtures/alice.epub');
       const spine = await parser.spine();
 
       // write the spine to a file
@@ -65,8 +60,7 @@ describe('EPubParser', () => {
 
   describe('toc()', () => {
     it('should parse table of contents from alice.epub', async () => {
-      const parser = new EPubParser('test/fixtures/alice.epub');
-      await parser.load();
+      const parser = await EPubParser.load('test/fixtures/alice.epub');
       const toc = await parser.toc();
 
       // write toc to a file
