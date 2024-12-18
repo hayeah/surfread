@@ -41,7 +41,7 @@ console.log(epubData); // All EPUB data including metadata, toc, chapters
 Tests are written using Bun's test runner. To run the tests:
 
 ```bash
-bun test src/lib/epub/__tests__/EPubParser.test.ts
+bun test EPubParser.test.ts
 ```
 
 ### Test Fixtures
@@ -51,7 +51,7 @@ The tests use fixture files to compare parser output. These fixtures are stored 
 To generate new fixtures (e.g., after making changes to the parser):
 
 ```bash
-env GEN_FIXTURE=true bun test src/lib/epub/__tests__/EPubParser.test.ts
+env GEN_FIXTURE=true bun test EPubParser.test.ts
 ```
 
 The following fixtures are used:
