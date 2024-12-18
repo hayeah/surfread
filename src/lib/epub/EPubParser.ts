@@ -106,6 +106,12 @@ export class EPubParser {
     return rootfile['full-path'];
   }
 
+  private async resolveFromOpf(href: string): Promise<string> {
+    const opfPath = await this.getOpfPath();
+    const opfDir = opfPath.split('/').slice(0, -1).join('/');
+    return opfDir ? `${opfDir}/${href}` : href;
+  }
+
   async metadata(): Promise<EPubMetadata> {
     if (!this.zip) {
       throw new Error('EPub file not loaded. Call load() first.');
@@ -179,6 +185,115 @@ export class EPubParser {
     }));
   }
 
+  async spine(): Promise<EPubSpineItem[]> {
+    if (!this.zip) {
+      throw new Error('EPub file not loaded. Call load() first.');
+    }
+
+    const opfPath = await this.getOpfPath();
+    const opfFile = this.zip.file(opfPath);
+    
+    if (!opfFile) {
+      throw new Error('Invalid epub: missing OPF file');
+    }
+
+    const opfContent = await opfFile.async('text');
+    const opfData = this.xmlParser.parse(opfContent);
+    const spine = opfData.package?.spine;
+
+    if (!spine?.itemref) {
+      throw new Error('Invalid epub: missing spine in OPF');
+    }
+
+    const items = Array.isArray(spine.itemref) ? spine.itemref : [spine.itemref];
+    
+    return items.map((item: any) => ({
+      idref: item.idref,
+      linear: item.linear !== 'no'
+    }));
+  }
+
+  async toc(): Promise<EPubTocItem[]> {
+    if (!this.zip) {
+      throw new Error('EPub file not loaded. Call load() first.');
+    }
+
+    const manifest = await this.manifest();
+
+    // Try EPUB3 nav first
+    const navItem = manifest.find(item => item.properties?.includes('nav'));
+    
+    if (navItem) {
+      const navPath = await this.resolveFromOpf(navItem.href);
+      const navFile = this.zip.file(navPath);
+      
+      if (!navFile) {
+        throw new Error('Invalid epub: nav document not found');
+      }
+
+      const navContent = await navFile.async('text');
+      const navData = this.xmlParser.parse(navContent);
+
+      // Find the nav element with epub:type="toc"
+      const nav = navData.html?.body?.section?.nav;
+      // Check if this nav element has epub:type containing "toc"
+      const isTocNav = nav?.['epub:type']?.includes('toc');
+
+      if (isTocNav && nav?.ol?.li) {
+        const parseNavItems = (items: any[]): EPubTocItem[] => {
+          return items.map((item: any) => {
+            const a = item.a;
+            return {
+              label: a['#text'] || '',
+              href: a.href || '',
+              subItems: item.ol?.li ? parseNavItems(Array.isArray(item.ol.li) ? item.ol.li : [item.ol.li]) : []
+            };
+          });
+        };
+
+        const items = Array.isArray(nav.ol.li) ? nav.ol.li : [nav.ol.li];
+        return parseNavItems(items);
+      }
+    }
+
+    // Fallback to EPUB2 NCX
+    const ncxItem = manifest.find(item => item.mediaType === 'application/x-dtbncx+xml');
+    
+    if (!ncxItem) {
+      throw new Error('Invalid epub: no table of contents found (neither nav nor NCX)');
+    }
+
+    const ncxPath = await this.resolveFromOpf(ncxItem.href);
+    const ncxFile = this.zip.file(ncxPath);
+    
+    if (!ncxFile) {
+      throw new Error('Invalid epub: NCX document not found');
+    }
+
+    const ncxContent = await ncxFile.async('text');
+    const ncxData = this.xmlParser.parse(ncxContent);
+
+    const navMap = ncxData.ncx?.navMap;
+    if (!navMap?.navPoint) {
+      throw new Error('Invalid epub: missing navigation points');
+    }
+
+    const parseNavPoints = (items: any[]): EPubTocItem[] => {
+      return items.map((item: any) => {
+        const content = item.content || {};
+        const href = content.src || '';
+        return {
+          label: item.navLabel?.text || '',
+          href,
+          subItems: item.navPoint ? parseNavPoints(Array.isArray(item.navPoint) ? item.navPoint : [item.navPoint]) : []
+        };
+      });
+    };
+
+    const navPoints = Array.isArray(navMap.navPoint) ? navMap.navPoint : [navMap.navPoint];
+    return parseNavPoints(navPoints);
+  }
+
   async parse(): Promise<EPubData> {
     if (!this.zip) {
       throw new Error('EPub file not loaded. Call load() first.');
@@ -186,13 +301,15 @@ export class EPubParser {
 
     const metadata = await this.metadata();
     const manifest = await this.manifest();
+    const spine = await this.spine();
+    const toc = await this.toc();
     
-    // TODO: Implement spine, toc, and chapters parsing
+    // TODO: Implement chapters parsing
     return {
       metadata,
       manifest,
-      spine: [],
-      toc: [],
+      spine,
+      toc,
       chapters: [],
     };
   }

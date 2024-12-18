@@ -1,0 +1,54 @@
+[
+  {
+    "idref": "cover",
+    "linear": false
+  },
+  {
+    "idref": "toc",
+    "linear": false
+  },
+  {
+    "idref": "titlepage",
+    "linear": true
+  },
+  {
+    "idref": "chapter_001",
+    "linear": true
+  },
+  {
+    "idref": "chapter_002",
+    "linear": true
+  },
+  {
+    "idref": "chapter_003",
+    "linear": true
+  },
+  {
+    "idref": "chapter_004",
+    "linear": true
+  },
+  {
+    "idref": "chapter_005",
+    "linear": true
+  },
+  {
+    "idref": "chapter_006",
+    "linear": true
+  },
+  {
+    "idref": "chapter_007",
+    "linear": true
+  },
+  {
+    "idref": "chapter_008",
+    "linear": true
+  },
+  {
+    "idref": "chapter_009",
+    "linear": true
+  },
+  {
+    "idref": "chapter_010",
+    "linear": true
+  }
+]

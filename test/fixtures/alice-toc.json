@@ -1,0 +1,57 @@
+[
+  {
+    "label": "Title Page",
+    "href": "titlepage.xhtml",
+    "subItems": []
+  },
+  {
+    "label": "Down The Rabbit-Hole",
+    "href": "chapter_001.xhtml",
+    "subItems": []
+  },
+  {
+    "label": "The Pool Of Tears",
+    "href": "chapter_002.xhtml",
+    "subItems": []
+  },
+  {
+    "label": "A Caucus-Race And A Long Tale",
+    "href": "chapter_003.xhtml",
+    "subItems": []
+  },
+  {
+    "label": "The Rabbit Sends In A Little Bill",
+    "href": "chapter_004.xhtml",
+    "subItems": []
+  },
+  {
+    "label": "Advice From A Caterpillar",
+    "href": "chapter_005.xhtml",
+    "subItems": []
+  },
+  {
+    "label": "Pig And Pepper",
+    "href": "chapter_006.xhtml",
+    "subItems": []
+  },
+  {
+    "label": "A Mad Tea-Party",
+    "href": "chapter_007.xhtml",
+    "subItems": []
+  },
+  {
+    "label": "The Queen's Croquet Ground",
+    "href": "chapter_008.xhtml",
+    "subItems": []
+  },
+  {
+    "label": "Who Stole The Tarts?",
+    "href": "chapter_009.xhtml",
+    "subItems": []
+  },
+  {
+    "label": "Alice's Evidence",
+    "href": "chapter_010.xhtml",
+    "subItems": []
+  }
+]
