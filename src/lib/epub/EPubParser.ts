@@ -349,20 +349,4 @@ export class EPubParser {
       chapters,
     };
   }
-
-  private getFirstValue(value: any): string {
-    if (!value) return '';
-    if (Array.isArray(value)) {
-      return value[0];
-    }
-    return value;
-  }
-
-  private getArray(value: any): any[] {
-    if (!value) return [];
-    if (Array.isArray(value)) {
-      return value;
-    }
-    return [value];
-  }
 }
