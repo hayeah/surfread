@@ -10,9 +10,9 @@ describe('extractZip', () => {
     await fs.mkdir(testDir, { recursive: true });
   });
 
-  // afterEach(async () => {
-  //   await fs.rm(testDir, { recursive: true, force: true });
-  // });
+  afterEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
 
   it('should extract zip contents to directory', async () => {
     const zipPath = path.join(process.cwd(), 'test/fixtures/test.epub');

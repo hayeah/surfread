@@ -1,4 +1,6 @@
 import fs from 'fs/promises';
+import JSZip from 'jszip';
+import { XMLParser } from 'fast-xml-parser';
 
 export interface EPubData {
   metadata: EPubMetadata;
@@ -44,8 +46,16 @@ export interface EPubChapter {
 
 export class EPubParser {
   private rawZipData: Uint8Array | null = null;
+  private zip: JSZip | null = null;
+  private xmlParser: XMLParser;
 
-  constructor(private filePath: string) {}
+  constructor(private filePath: string) {
+    this.xmlParser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '',
+      parseAttributeValue: true,
+    });
+  }
 
   async load(): Promise<void> {
     try {
@@ -61,6 +71,8 @@ export class EPubParser {
           this.rawZipData[3] !== 0x04) {
         throw new Error('Invalid epub file');
       }
+
+      this.zip = await JSZip.loadAsync(this.rawZipData);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         throw new Error('File not found');
@@ -69,10 +81,86 @@ export class EPubParser {
     }
   }
 
-  async parse(): Promise<EPubData> {
-    if (!this.rawZipData) {
+  private async getContainerXml(): Promise<any> {
+    if (!this.zip) {
       throw new Error('EPub file not loaded. Call load() first.');
     }
-    throw new Error('Not implemented');
+
+    const containerFile = this.zip.file('META-INF/container.xml');
+    if (!containerFile) {
+      throw new Error('Invalid epub: missing container.xml');
+    }
+
+    const containerXml = await containerFile.async('text');
+    return this.xmlParser.parse(containerXml);
+  }
+
+  private async getOpfPath(): Promise<string> {
+    const container = await this.getContainerXml();
+    const rootfile = container?.container?.rootfiles?.rootfile;
+    
+    if (!rootfile || !rootfile['full-path']) {
+      throw new Error('Invalid epub: cannot find OPF file path');
+    }
+
+    return rootfile['full-path'];
+  }
+
+  async metadata(): Promise<EPubMetadata> {
+    if (!this.zip) {
+      throw new Error('EPub file not loaded. Call load() first.');
+    }
+
+    const opfPath = await this.getOpfPath();
+    const opfFile = this.zip.file(opfPath);
+    
+    if (!opfFile) {
+      throw new Error('Invalid epub: missing OPF file');
+    }
+
+    const opfContent = await opfFile.async('text');
+    const opfData = this.xmlParser.parse(opfContent);
+    const metadata = opfData.package?.metadata;
+
+    if (!metadata) {
+      throw new Error('Invalid epub: missing metadata in OPF');
+    }
+
+    // Helper function to handle both single values and arrays
+    const getValue = (field: any): string[] => {
+      if (!field) return [];
+      if (Array.isArray(field)) {
+        return field.map(item => typeof item === 'object' ? item['#text'] || '' : String(item));
+      }
+      return [typeof field === 'object' ? field['#text'] || '' : String(field)];
+    };
+
+    return {
+      title: getValue(metadata['dc:title'])[0] || '',
+      author: getValue(metadata['dc:creator'])[0] || '',
+      language: getValue(metadata['dc:language'])[0] || '',
+      publisher: getValue(metadata['dc:publisher'])[0],
+      description: getValue(metadata['dc:description'])[0],
+      rights: getValue(metadata['dc:rights'])[0],
+      identifiers: getValue(metadata['dc:identifier']),
+      date: getValue(metadata['dc:date'])[0],
+    };
+  }
+
+  async parse(): Promise<EPubData> {
+    if (!this.zip) {
+      throw new Error('EPub file not loaded. Call load() first.');
+    }
+
+    const metadata = await this.metadata();
+    
+    // TODO: Implement manifest, spine, toc, and chapters parsing
+    return {
+      metadata,
+      manifest: [],
+      spine: [],
+      toc: [],
+      chapters: [],
+    };
   }
 }
