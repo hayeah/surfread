@@ -147,20 +147,69 @@ export class EPubParser {
     };
   }
 
+  async manifest(): Promise<EPubManifestItem[]> {
+    if (!this.zip) {
+      throw new Error('EPub file not loaded. Call load() first.');
+    }
+
+    const opfPath = await this.getOpfPath();
+    const opfFile = this.zip.file(opfPath);
+    
+    if (!opfFile) {
+      throw new Error('Invalid epub: missing OPF file');
+    }
+
+    const opfContent = await opfFile.async('text');
+    const opfData = this.xmlParser.parse(opfContent);
+    
+    
+    const manifest = opfData.package?.manifest;
+
+    if (!manifest?.item) {
+      throw new Error('Invalid epub: missing manifest in OPF');
+    }
+
+    const items = Array.isArray(manifest.item) ? manifest.item : [manifest.item];
+    
+    return items.map((item: any) => ({
+      id: item['id'],
+      href: item['href'],
+      mediaType: item['media-type'],
+      properties: item['properties']?.split(' ') || undefined
+    }));
+  }
+
   async parse(): Promise<EPubData> {
     if (!this.zip) {
       throw new Error('EPub file not loaded. Call load() first.');
     }
 
     const metadata = await this.metadata();
+    const manifest = await this.manifest();
     
-    // TODO: Implement manifest, spine, toc, and chapters parsing
+    // TODO: Implement spine, toc, and chapters parsing
     return {
       metadata,
-      manifest: [],
+      manifest,
       spine: [],
       toc: [],
       chapters: [],
     };
+  }
+
+  private getFirstValue(value: any): string {
+    if (!value) return '';
+    if (Array.isArray(value)) {
+      return value[0];
+    }
+    return value;
+  }
+
+  private getArray(value: any): any[] {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+      return value;
+    }
+    return [value];
   }
 }

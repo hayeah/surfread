@@ -1,4 +1,5 @@
 import { EPubParser } from '../EPubParser';
+import fs from 'fs';
 
 describe('EPubParser', () => {
   describe('load()', () => {
@@ -29,6 +30,21 @@ describe('EPubParser', () => {
         identifiers: [ "edu.nyu.itp.future-of-publishing.alice-in-wonderland" ],
         date: undefined
       });
+    });
+  });
+
+  describe('manifest()', () => {
+    it('should parse manifest from alice.epub', async () => {
+      const parser = new EPubParser('test/fixtures/alice.epub');
+      await parser.load();
+      const manifest = await parser.manifest();
+
+      // write the manifest to a file
+      // fs.writeFileSync('test/fixtures/alice-manifest.json', JSON.stringify(manifest, null, 2));
+      
+      // Load expected manifest from fixture
+      const expectedManifest = require('test/fixtures/alice-manifest.json');
+      expect(manifest).toEqual(expectedManifest);
     });
   });
 });
