@@ -5,6 +5,50 @@ import { Dropzone } from '@/components/ui/dropzone';
 import { Outline } from '@/components/reader/outline';
 import { Viewer } from '@/components/reader/viewer';
 
+interface LeftSidebarProps {
+  navigation: NavItem[];
+  onChapterSelect: (href: string) => void;
+  onCloseBook: () => void;
+}
+
+function LeftSidebar({ navigation, onChapterSelect, onCloseBook }: LeftSidebarProps) {
+  return (
+    <div className="w-64 border-r bg-white overflow-y-auto hidden md:block">
+      <div className="p-4 border-b">
+        <button
+          onClick={onCloseBook}
+          className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+        >
+          Close Book
+        </button>
+      </div>
+      {navigation && (
+        <Outline
+          toc={navigation}
+          onChapterSelect={onChapterSelect}
+        />
+      )}
+    </div>
+  );
+}
+
+interface RightSidebarProps {
+  book: Book;
+  scrollPosition: number;
+}
+
+function RightSidebar({ book, scrollPosition }: RightSidebarProps) {
+  return (
+    <div className="w-64 border-l bg-white overflow-y-auto hidden lg:block">
+      <div className="p-4">
+        <div className="text-sm text-gray-500">
+          Progress: {Math.round(scrollPosition * 100)}%
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [book, setBook] = useState<Book | null>(null);
   const [navigation, setNavigation] = useState<NavItem[]>([]);
@@ -63,27 +107,15 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex h-screen">
-            {/* Left sidebar - Table of Contents */}
-            <div className="w-64 border-r bg-white overflow-y-auto hidden md:block">
-              <div className="p-4 border-b">
-                <button
-                  onClick={() => {
-                    setBook(null);
-                    setNavigation([]);
-                    localStorage.removeItem('lastEpubFile');
-                  }}
-                  className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-                >
-                  Close Book
-                </button>
-              </div>
-              {navigation && (
-                <Outline
-                  toc={navigation}
-                  onChapterSelect={href => setCurrentLocation(href)}
-                />
-              )}
-            </div>
+            <LeftSidebar 
+              navigation={navigation}
+              onChapterSelect={href => setCurrentLocation(href)}
+              onCloseBook={() => {
+                setBook(null);
+                setNavigation([]);
+                localStorage.removeItem('lastEpubFile');
+              }}
+            />
 
             {/* Main content - centered with max width */}
             <div className="flex-1 flex justify-center bg-gray-50">
@@ -99,25 +131,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right toolbar - only visible on large screens */}
-            <div className="w-64 border-l bg-white overflow-y-auto hidden lg:block">
-              <div className="p-4">
-                <div className="text-sm text-gray-600">
-                  Scroll Position: {Math.round(scrollPosition)}px
-                </div>
-                <h3 className="font-medium mb-4">Tools</h3>
-                {/* Add toolbar buttons/controls here */}
-                <button className="w-full mb-2 px-4 py-2 text-left hover:bg-gray-100 rounded">
-                  Font Size
-                </button>
-                <button className="w-full mb-2 px-4 py-2 text-left hover:bg-gray-100 rounded">
-                  Theme
-                </button>
-                <button className="w-full mb-2 px-4 py-2 text-left hover:bg-gray-100 rounded">
-                  Search
-                </button>
-              </div>
-            </div>
+            <RightSidebar book={book} scrollPosition={scrollPosition} />
           </div>
         )}
       </main>
