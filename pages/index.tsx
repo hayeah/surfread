@@ -43,6 +43,54 @@ interface RightSidebarProps {
 }
 
 function RightSidebar({ book, scrollPosition, selectedText }: RightSidebarProps) {
+  const [explanation, setExplanation] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>("");
+
+  useEffect(() => {
+    if (!selectedText) {
+      setExplanation("");
+      setError("");
+      return;
+    }
+
+    async function getExplanation() {
+      if (!selectedText) {
+        return;
+      }
+
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch('/api/explain', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: selectedText.text,
+            context: selectedText.context,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to get explanation');
+        }
+
+        setExplanation(data.explanation);
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Failed to get explanation');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    getExplanation();
+  }, [selectedText]);
+
   return (
     <div className="w-64 border-l bg-white overflow-y-auto hidden lg:block">
       <div className="p-4">
@@ -60,6 +108,17 @@ function RightSidebar({ book, scrollPosition, selectedText }: RightSidebarProps)
                 <div className="mt-1 text-sm text-gray-500">{selectedText.context}</div>
               </>
             )}
+            
+            <div className="mt-4">
+              <div className="text-sm font-medium text-gray-700">Explanation</div>
+              {isLoading ? (
+                <div className="mt-2 text-sm text-gray-500">Loading explanation...</div>
+              ) : error ? (
+                <div className="mt-2 text-sm text-red-500">{error}</div>
+              ) : explanation ? (
+                <div className="mt-2 text-sm text-gray-600">{explanation}</div>
+              ) : null}
+            </div>
           </div>
         )}
       </div>
