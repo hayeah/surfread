@@ -35,15 +35,33 @@ function LeftSidebar({ navigation, onChapterSelect, onCloseBook }: LeftSidebarPr
 interface RightSidebarProps {
   book: Book;
   scrollPosition: number;
+  selectedText?: {
+    text: string;
+    context: string;
+    cfi?: string;
+  };
 }
 
-function RightSidebar({ book, scrollPosition }: RightSidebarProps) {
+function RightSidebar({ book, scrollPosition, selectedText }: RightSidebarProps) {
   return (
     <div className="w-64 border-l bg-white overflow-y-auto hidden lg:block">
       <div className="p-4">
         <div className="text-sm text-gray-500">
           Progress: {Math.round(scrollPosition * 100)}%
         </div>
+        
+        {selectedText && (
+          <div className="mt-4">
+            <div className="text-sm font-medium text-gray-700">Selected Text</div>
+            <div className="mt-1 text-sm text-gray-600">{selectedText.text}</div>
+            {selectedText.context && (
+              <>
+                <div className="mt-2 text-sm font-medium text-gray-700">Context</div>
+                <div className="mt-1 text-sm text-gray-500">{selectedText.context}</div>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -54,6 +72,7 @@ export default function Home() {
   const [navigation, setNavigation] = useState<NavItem[]>([]);
   const [currentLocation, setCurrentLocation] = useState<string>();
   const [scrollPosition, setScrollPosition] = useState<number>(0);
+  const [selectedText, setSelectedText] = useState<{ text: string; context: string; cfi?: string } | undefined>();
 
   useEffect(() => {
     // Try to load the last opened file from localStorage
@@ -126,12 +145,17 @@ export default function Home() {
                     currentLocation={currentLocation}
                     navigation={navigation}
                     onScrollPositionChange={setScrollPosition}
+                    onTextSelect={setSelectedText}
                   />
                 )}
               </div>
             </div>
 
-            <RightSidebar book={book} scrollPosition={scrollPosition} />
+            <RightSidebar 
+              book={book} 
+              scrollPosition={scrollPosition}
+              selectedText={selectedText}
+            />
           </div>
         )}
       </main>
