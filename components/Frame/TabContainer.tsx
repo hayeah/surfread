@@ -102,18 +102,31 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
       const panel = document.querySelector(`[data-tab-id="${tabId}"]`) as HTMLElement;
 
       if (container && panel) {
-        // Use offsetLeft for direct position relative to container
-        const targetScroll = panel.offsetLeft;
+        const containerRect = container.getBoundingClientRect();
+        const panelRect = panel.getBoundingClientRect();
 
-        console.log('Scrolling:', {
-          targetScroll,
-          currentScroll: container.scrollLeft,
-          panelOffsetLeft: panel.offsetLeft
-        });
+        // Check if panel is fully visible
+        const panelLeftVisible = panelRect.left >= containerRect.left;
+        const panelRightVisible = panelRect.right <= containerRect.right;
+        const isFullyVisible = panelLeftVisible && panelRightVisible;
 
-        smoothScrollTo(container, targetScroll, 150);
-      } else {
-        console.log('Not found:', { container, panel });
+        if (!isFullyVisible) {
+          let targetScroll = container.scrollLeft;
+
+          // If right edge is hidden, scroll minimally to show it
+          if (!panelRightVisible) {
+            const overflowRight = panelRect.right - containerRect.right;
+            targetScroll += overflowRight;
+          }
+
+          // If left edge is hidden, scroll to show it
+          if (!panelLeftVisible) {
+            const overflowLeft = containerRect.left - panelRect.left;
+            targetScroll -= overflowLeft;
+          }
+
+          smoothScrollTo(container, targetScroll, 150);
+        }
       }
     }
   };
@@ -177,8 +190,8 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
                 key={tab.id}
                 data-tab-id={tab.id}
                 className={`w-[400px] flex-shrink-0 px-4 h-full flex flex-col ${activeTab === tab.id
-                    ? 'border-2 border-blue-500/20'
-                    : 'border-r border-gray-200'
+                  ? 'border-2 border-blue-500/20'
+                  : 'border-r border-gray-200'
                   }`}
               >
                 <div
