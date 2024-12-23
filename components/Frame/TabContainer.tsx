@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   DndContext,
   closestCenter,
@@ -70,9 +70,51 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
     }
   };
 
+  const easeInOutCubic = (t: number): number => {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  };
+
+  const smoothScrollTo = (container: HTMLElement, targetX: number, duration: number) => {
+    const startX = container.scrollLeft;
+    const distanceX = targetX - startX;
+    const startTime = performance.now();
+
+    const scrollStep = (currentTime: number) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+      const ease = easeInOutCubic(progress);
+
+      container.scrollLeft = startX + distanceX * ease;
+
+      if (progress < 1) {
+        requestAnimationFrame(scrollStep);
+      }
+    };
+
+    requestAnimationFrame(scrollStep);
+  };
+
   const handleTabClick = (tabId: string) => {
     if (!isDragging) {
       setActiveTab(tabId);
+
+      const container = document.querySelector('.panel-container') as HTMLElement;
+      const panel = document.querySelector(`[data-tab-id="${tabId}"]`) as HTMLElement;
+
+      if (container && panel) {
+        // Use offsetLeft for direct position relative to container
+        const targetScroll = panel.offsetLeft;
+
+        console.log('Scrolling:', {
+          targetScroll,
+          currentScroll: container.scrollLeft,
+          panelOffsetLeft: panel.offsetLeft
+        });
+
+        smoothScrollTo(container, targetScroll, 150);
+      } else {
+        console.log('Not found:', { container, panel });
+      }
     }
   };
 
@@ -128,12 +170,16 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
         </div>
       </DndContext>
       <div className="flex-1 relative">
-        <div className="absolute inset-0 overflow-x-auto">
+        <div className="absolute inset-0 overflow-x-auto panel-container">
           <div className="flex h-full min-w-min">
             {tabs.map((tab) => (
               <div
                 key={tab.id}
-                className="w-[400px] flex-shrink-0 border-r border-gray-200 px-4 h-full flex flex-col"
+                data-tab-id={tab.id}
+                className={`w-[400px] flex-shrink-0 px-4 h-full flex flex-col ${activeTab === tab.id
+                    ? 'border-2 border-blue-500/20'
+                    : 'border-r border-gray-200'
+                  }`}
               >
                 <div
                   className="flex-1 overflow-y-auto"
