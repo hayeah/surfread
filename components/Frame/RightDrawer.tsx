@@ -1,4 +1,5 @@
 import React from "react";
+import DrawerButton from "./DrawerButton";
 
 interface RightDrawerProps {
   isOpen: boolean;
@@ -8,19 +9,29 @@ interface RightDrawerProps {
 
 const RightDrawer: React.FC<RightDrawerProps> = ({ isOpen, onToggle, children }) => {
   return (
-    <div
-      className={`fixed right-0 top-0 h-full transition-transform duration-300 ${
-        isOpen ? "translate-x-0" : "translate-x-full"
-      } bg-gray-800 text-white w-64 shadow-lg z-10`}
-    >
-      <button 
-        onClick={onToggle} 
-        className="absolute -left-8 top-4 p-2 bg-gray-700 hover:bg-gray-600 rounded-l"
+    <>
+      <div
+        className={`fixed right-0 top-0 h-full transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
+          } bg-white text-black w-64 shadow-lg z-40`}
       >
-        {isOpen ? "→" : "←"}
-      </button>
-      <div className="p-4">{children}</div>
-    </div>
+        <DrawerButton
+          onClick={onToggle}
+          isOpen={isOpen}
+          position="right"
+          className="absolute right-4 top-4"
+        />
+        <div className="p-4">{children}</div>
+      </div>
+
+      {/* Handle for opening the drawer */}
+      <DrawerButton
+        onClick={onToggle}
+        isOpen={isOpen}
+        position="right"
+        className={`fixed right-0 top-1/2 -translate-y-1/2 bg-white shadow transition-opacity duration-300 z-50 ${isOpen ? "opacity-0" : "opacity-100"
+          }`}
+      />
+    </>
   );
 };
 

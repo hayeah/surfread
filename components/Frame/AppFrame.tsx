@@ -30,10 +30,9 @@ const AppFrame: React.FC<AppFrameProps> = ({
         {leftDrawerContent}
       </LeftDrawer>
 
-      <main
-        className={`flex-1 transition-all duration-300 ${leftDrawerOpen ? "ml-64" : "ml-0"
-          } ${rightDrawerOpen ? "mr-64" : "mr-0"}`}
-      >
+      <main className={`flex-1 transition-all duration-300 ${
+        leftDrawerOpen ? "ml-[600px]" : "ml-0"
+      }`}>
         <TabContainer initialTabs={tabs} />
       </main>
 
