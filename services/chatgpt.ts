@@ -33,11 +33,11 @@ export async function getExplanation(
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that explains text passages in a clear and concise way. Focus on the main ideas and provide context when relevant."
+            content: "You are an assistant that eplain text to help with reading."
           },
           {
             role: "user",
-            content: `Please explain this text: "${text}"\n\nHere's the surrounding context: "${context}"`
+            content: `Explain this text in a rich, detailed, erudite way: "${text}"\n\nHere's the surrounding context: "${context}"`
           }
         ],
         temperature: 0.7,

@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ePub, { Book, Rendition, NavItem, Location } from 'epubjs';
 import { findNavItemByHref, encodeLocation, decodeLocation } from '@/lib/navigation';
+import debounce from 'lodash/debounce';
 
 interface ViewerProps {
   book: Book;
@@ -14,6 +15,13 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
   const viewerRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
   const displayPromiseRef = useRef<Promise<any> | null>(null);
+
+  const debouncedTextSelect = useCallback(
+    debounce((selection: { text: string; context: string; cfi?: string }) => {
+      onTextSelect?.(selection);
+    }, 300),
+    [onTextSelect]
+  );
 
   useEffect(() => {
     if (viewerRef.current && book) {
@@ -128,7 +136,7 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
         // Store CFI range for potential future use
         const cfi = cfiRange;
 
-        onTextSelect({
+        debouncedTextSelect({
           text: selectedText,
           context: `...${beforeContext} [${selectedText}] ${afterContext}...`,
           cfi // This might be useful for future enhancements
@@ -146,7 +154,7 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
       });
     }
   };
-}, [book, navigation]);
+}, [book, navigation, onTextSelect]);
 
 useEffect(() => {
   if (currentLocation && renditionRef.current) {
