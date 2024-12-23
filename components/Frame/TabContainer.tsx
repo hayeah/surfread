@@ -17,6 +17,7 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { SortableTab } from "./SortableTab";
+import { ChatInput } from "./ChatInput";
 
 interface Tab {
   id: string;
@@ -132,9 +133,22 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
             {tabs.map((tab) => (
               <div
                 key={tab.id}
-                className="w-[400px] flex-shrink-0 border-r border-gray-200 px-4 h-full"
+                className="w-[400px] flex-shrink-0 border-r border-gray-200 px-4 h-full flex flex-col"
               >
-                {tab.content}
+                <div
+                  className="flex-1 overflow-y-auto"
+                  onClick={() => handleTabClick(tab.id)}
+                >
+                  {tab.content}
+                </div>
+                {activeTab === tab.id && (
+                  <ChatInput
+                    onSend={(message) => {
+                      console.log(`Message from tab ${tab.id}:`, message);
+                      // Handle the message here
+                    }}
+                  />
+                )}
               </div>
             ))}
           </div>
