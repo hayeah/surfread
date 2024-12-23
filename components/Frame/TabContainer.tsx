@@ -159,8 +159,10 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
           {draggedItem && (
             <SortableTab
               id={draggedItem}
-              label={tabs.find(tab => tab.id === draggedItem)?.label}
+              label={tabs.find(tab => tab.id === draggedItem)!.label}
               isActive={false}
+              onClick={() => handleTabClick(draggedItem)}
+              onClose={() => handleCloseTab(draggedItem)}
             />
           )}
         </DragOverlay>
