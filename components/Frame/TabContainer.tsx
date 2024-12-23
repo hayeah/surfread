@@ -58,12 +58,12 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
     setIsDragging(false);
     setDraggedItem(null);
     const { active, over } = event;
-    
+
     if (active.id !== over?.id) {
       setTabs((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over?.id);
-        
+
         return arrayMove(items, oldIndex, newIndex);
       });
     }
@@ -75,9 +75,25 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
     }
   };
 
+  const handleCloseTab = (tabId: string) => {
+    const newTabs = tabs.filter(tab => tab.id !== tabId);
+    if (newTabs.length === 0) {
+      return; // Don't close the last tab
+    }
+
+    if (activeTab === tabId) {
+      // If closing active tab, activate the next available tab
+      const index = tabs.findIndex(tab => tab.id === tabId);
+      const nextTab = tabs[index + 1] || tabs[index - 1];
+      setActiveTab(nextTab.id);
+    }
+
+    setTabs(newTabs);
+  };
+
   return (
     <div className="flex flex-col w-full h-full">
-      <DndContext 
+      <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
@@ -92,7 +108,7 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
             />
           )}
         </DragOverlay>
-        <div className="flex bg-gray-900 text-white">
+        <div className="flex bg-gray-900 text-white overflow-x-auto">
           <SortableContext
             items={tabs.map(tab => tab.id)}
             strategy={horizontalListSortingStrategy}
@@ -104,14 +120,25 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
                 label={tab.label}
                 isActive={activeTab === tab.id}
                 onClick={() => handleTabClick(tab.id)}
+                onClose={() => handleCloseTab(tab.id)}
               />
             ))}
           </SortableContext>
         </div>
       </DndContext>
-      
-      <div className="flex-1 p-4 bg-white">
-        {tabs.find(tab => tab.id === activeTab)?.content}
+      <div className="flex-1 relative">
+        <div className="absolute inset-0 overflow-x-auto">
+          <div className="flex h-full min-w-min">
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                className="w-[400px] flex-shrink-0 border-r border-gray-200 px-4 h-full"
+              >
+                {tab.content}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
