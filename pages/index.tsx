@@ -55,6 +55,8 @@ function RightSidebar({ book, scrollPosition, selectedText }: RightSidebarProps)
     }
 
     async function getExplanation() {
+      // disable for now 
+      return
       if (!selectedText) {
         return;
       }
@@ -97,7 +99,7 @@ function RightSidebar({ book, scrollPosition, selectedText }: RightSidebarProps)
         <div className="text-sm text-gray-500">
           Progress: {Math.round(scrollPosition * 100)}%
         </div>
-        
+
         {selectedText && (
           <div className="mt-4">
             <div className="text-sm font-medium text-gray-700">Selected Text</div>
@@ -108,7 +110,7 @@ function RightSidebar({ book, scrollPosition, selectedText }: RightSidebarProps)
                 <div className="mt-1 text-sm text-gray-500">{selectedText.context}</div>
               </>
             )}
-            
+
             <div className="mt-4">
               <div className="text-sm font-medium text-gray-700">Explanation</div>
               {isLoading ? (
@@ -185,7 +187,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex h-screen">
-            <LeftSidebar 
+            <LeftSidebar
               navigation={navigation}
               onChapterSelect={href => setCurrentLocation(href)}
               onCloseBook={() => {
@@ -210,8 +212,8 @@ export default function Home() {
               </div>
             </div>
 
-            <RightSidebar 
-              book={book} 
+            <RightSidebar
+              book={book}
               scrollPosition={scrollPosition}
               selectedText={selectedText}
             />
