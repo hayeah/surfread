@@ -1,71 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Head from 'next/head';
-import ePub, { Book, NavItem } from 'epubjs';
 import { Dropzone } from '@/components/ui/dropzone';
 import { Outline } from '@/components/reader/outline';
 import { Viewer } from '@/components/reader/viewer';
 import AppFrame from "../components/Frame/AppFrame";
+import { useEpubStore } from '@/store/epubStore';
 
-const EpubReader = ({
-  onBookLoaded,
-  onNavigationLoaded,
-  currentLocation,
-  onLocationChange,
-  onScrollPositionChange,
-  onTextSelect,
-}: {
-  onBookLoaded: (book: Book) => void;
-  onNavigationLoaded: (nav: NavItem[]) => void;
-  currentLocation?: string;
-  onLocationChange: (location: string) => void;
-  onScrollPositionChange: (position: number) => void;
-  onTextSelect: (selection: { text: string; context: string; cfi?: string }) => void;
-}) => {
-  const [book, setBook] = useState<Book | null>(null);
-  const [navigation, setNavigation] = useState<NavItem[]>([]);
-
-  useEffect(() => {
-    // Try to load the last opened file from localStorage
-    const lastFile = localStorage.getItem('lastEpubFile');
-    if (lastFile) {
-      const arrayBuffer = new Uint8Array(JSON.parse(lastFile)).buffer;
-      const newBook = ePub(arrayBuffer);
-      newBook.ready.then(() => {
-        const nav = newBook.navigation.toc;
-        setNavigation(nav);
-        setBook(newBook);
-        onBookLoaded(newBook);
-        onNavigationLoaded(nav);
-      }).catch((error) => {
-        console.error('Error loading EPUB from localStorage:', error);
-        localStorage.removeItem('lastEpubFile');
-      });
-    }
-  }, [onBookLoaded, onNavigationLoaded]);
-
-  const handleFileAccepted = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      if (e.target?.result) {
-        // Save the file to localStorage
-        const arrayBuffer = e.target.result as ArrayBuffer;
-        localStorage.setItem('lastEpubFile', JSON.stringify(Array.from(new Uint8Array(arrayBuffer))));
-
-        const newBook = ePub(e.target.result);
-        try {
-          await newBook.ready;
-          const nav = newBook.navigation.toc;
-          setNavigation(nav);
-          setBook(newBook);
-          onBookLoaded(newBook);
-          onNavigationLoaded(nav);
-        } catch (error) {
-          console.error('Error loading EPUB:', error);
-        }
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  };
+const EpubReader = () => {
+  const { book, navigation, currentLocation, handleFileAccepted, setCurrentLocation, setScrollPosition, setSelectedText } = useEpubStore();
 
   return (
     <div className="h-full w-full bg-white">
@@ -79,8 +21,8 @@ const EpubReader = ({
             book={book}
             currentLocation={currentLocation}
             navigation={navigation}
-            onScrollPositionChange={onScrollPositionChange}
-            onTextSelect={onTextSelect}
+            onScrollPositionChange={setScrollPosition}
+            onTextSelect={setSelectedText}
           />
         </div>
       )}
@@ -88,37 +30,30 @@ const EpubReader = ({
   );
 };
 
-const EpubOutline = ({ navigation, onChapterSelect, onCloseBook }: {
-  navigation: NavItem[],
-  onChapterSelect: (href: string) => void,
-  onCloseBook: () => void
-}) => {
+const EpubOutline = () => {
+  const { navigation, setCurrentLocation, closeBook } = useEpubStore();
+
   return (
     <div className="h-full w-full bg-white">
       <div className="p-4 border-b">
         <button
-          onClick={onCloseBook}
+          onClick={closeBook}
           className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
         >
           Close Book
         </button>
       </div>
-      {navigation && (
-        <Outline
-          toc={navigation}
-          onChapterSelect={onChapterSelect}
-        />
-      )}
+      <Outline toc={navigation} onChapterSelect={setCurrentLocation} />
     </div>
   );
 };
 
-const EpubPage = () => {
-  const [book, setBook] = useState<Book | null>(null);
-  const [navigation, setNavigation] = useState<NavItem[]>([]);
-  const [currentLocation, setCurrentLocation] = useState<string>();
-  const [scrollPosition, setScrollPosition] = useState<number>(0);
-  const [selectedText, setSelectedText] = useState<{ text: string; context: string; cfi?: string } | undefined>();
+export default function EpubPage() {
+  const { book, loadLastBook } = useEpubStore();
+
+  React.useEffect(() => {
+    loadLastBook();
+  }, [loadLastBook]);
 
   const tabs = [
     {
@@ -126,7 +61,8 @@ const EpubPage = () => {
       label: "Reader",
       content: (
         <div className="p-4">
-          <div className="text-sm text-gray-500">
+          {"hoho"}
+          {/* <div className="text-sm text-gray-500">
             Progress: {Math.round(scrollPosition * 100)}%
           </div>
 
@@ -141,7 +77,7 @@ const EpubPage = () => {
                 </>
               )}
             </div>
-          )}
+          )} */}
         </div>
       ),
     },
@@ -160,33 +96,11 @@ const EpubPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
       <AppFrame
-        leftDrawerContent={
-          <EpubReader
-            onBookLoaded={setBook}
-            onNavigationLoaded={setNavigation}
-            currentLocation={currentLocation}
-            onLocationChange={setCurrentLocation}
-            onScrollPositionChange={setScrollPosition}
-            onTextSelect={setSelectedText}
-          />
-        }
-        rightDrawerContent={
-          <EpubOutline
-            navigation={navigation}
-            onChapterSelect={(href) => setCurrentLocation(href)}
-            onCloseBook={() => {
-              setBook(null);
-              setNavigation([]);
-              localStorage.removeItem('lastEpubFile');
-            }}
-          />
-        }
+        leftDrawerContent={<EpubReader />}
+        rightDrawerContent={book ? <EpubOutline /> : null}
         tabs={tabs}
       />
     </>
   );
-};
-
-export default EpubPage;
+}

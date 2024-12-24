@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import ePub, { Book, Rendition, NavItem, Location } from 'epubjs';
+import React, { useEffect, useRef, useCallback } from 'react';
+import { Book, Rendition, NavItem, Location } from 'epubjs';
 import { findNavItemByHref, encodeLocation, decodeLocation } from '@/lib/navigation';
 import debounce from 'lodash/debounce';
+import { useEpubStore } from '@/store/epubStore';
 
 interface ViewerProps {
   book: Book;
@@ -15,6 +16,7 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
   const viewerRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
   const displayPromiseRef = useRef<Promise<any> | null>(null);
+  const { setCurrentLocation } = useEpubStore();
 
   const debouncedTextSelect = useCallback(
     debounce((selection: { text: string; context: string; cfi?: string }) => {
@@ -51,21 +53,10 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
 
       displayPromiseRef.current = renditionRef.current.display(initialLocation);
 
-      // Handle location changes
-      // renditionRef.current.on('relocated', (location: Location) => {
-      //   const href = location.start.href;
-      //   if (href) {
-      //     const navItem = findNavItemByHref(navigation, href);
-      //     const hash = encodeLocation(navItem, href);
-      //     window.history.replaceState(null, '', `#${hash}`);
-      //   }
-      // });
-
       // Track current location when navigating
       renditionRef.current.on("locationChanged", (location: Location) => {
-        // Store location in localStorage
         localStorage.setItem('readerLocation', JSON.stringify(location.start));
-        console.log("Current location:", location);
+        setCurrentLocation(location.start.href);
       });
 
       // Add selection event handler
@@ -76,92 +67,37 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
         if (!selection || selection.rangeCount === 0) return;
 
         const selectedText = selection.toString().trim();
-
-        // Get the current section's content
-        const section = contents.document.body;
-        const walker = contents.document.createTreeWalker(
-          section,
-          NodeFilter.SHOW_TEXT,
-          null,
-          false
-        );
-
-        // Find the selected range's start and end positions
-        const range = selection.getRangeAt(0);
-        const startContainer = range.startContainer;
-        const endContainer = range.endContainer;
-
-        // Collect all text nodes
-        const textNodes: Text[] = [];
-        let currentNode: Node | null = walker.nextNode();
-
-        while (currentNode) {
-          textNodes.push(currentNode as Text);
-          currentNode = walker.nextNode();
-        }
-
-        // Find indices of start and end containers
-        const startNodeIndex = textNodes.findIndex(node => node === startContainer);
-        const endNodeIndex = textNodes.findIndex(node => node === endContainer);
-
-        if (startNodeIndex === -1 || endNodeIndex === -1) return;
-
-        // Get context nodes (up to 2 nodes before and after)
-        const contextStart = Math.max(0, startNodeIndex - 2);
-        const contextEnd = Math.min(textNodes.length - 1, endNodeIndex + 2);
-
-        // Build context string
-        let beforeContext = '';
-        let afterContext = '';
-
-        // Get text before selection
-        for (let i = contextStart; i < startNodeIndex; i++) {
-          beforeContext += textNodes[i].textContent || '';
-        }
-        beforeContext += startContainer.textContent?.slice(0, range.startOffset) || '';
-
-        // Get text after selection
-        afterContext += endContainer.textContent?.slice(range.endOffset) || '';
-        for (let i = endNodeIndex + 1; i <= contextEnd; i++) {
-          afterContext += textNodes[i].textContent || '';
-        }
-
-        // Trim and limit context length
-        const maxContextLength = 200;
-        beforeContext = beforeContext.trim().slice(-maxContextLength);
-        afterContext = afterContext.trim().slice(0, maxContextLength);
-
-        // Store CFI range for potential future use
-        const cfi = cfiRange;
+        if (!selectedText) return;
 
         debouncedTextSelect({
           text: selectedText,
-          context: `...${beforeContext} [${selectedText}] ${afterContext}...`,
-          cfi // This might be useful for future enhancements
+          context: getSelectionContext(selection),
+          cfi: cfiRange
         });
       });
 
-    }
-
-    return () => {
-      setTimeout(() => {
+      return () => {
         if (renditionRef.current) {
           renditionRef.current.destroy();
         }
-      }, 1000);
-    };
-  }, [book, navigation, onTextSelect]);
+      };
+    }
+  }, [book, navigation, debouncedTextSelect, setCurrentLocation]);
 
   useEffect(() => {
     if (currentLocation && renditionRef.current) {
-      console.log('Navigating to:', currentLocation);
-      renditionRef.current.display(currentLocation).catch(error => {
-        console.error('Error navigating to location:', error);
-      });
+      renditionRef.current.display(currentLocation);
     }
   }, [currentLocation]);
 
   return (
-    <div ref={viewerRef} className="w-full h-full bg-white" />
+    <div ref={viewerRef} className="h-full w-full" />
   );
+}
+
+function getSelectionContext(selection: Selection): string {
+  const range = selection.getRangeAt(0);
+  const container = range.commonAncestorContainer;
+  const context = container.textContent || '';
+  return context.trim();
 }
