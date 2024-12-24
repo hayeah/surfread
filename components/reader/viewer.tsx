@@ -8,21 +8,20 @@ interface ViewerProps {
   book: Book;
   currentLocation?: string;
   navigation: NavItem[];
-  onScrollPositionChange?: (position: number) => void;
-  onTextSelect?: (selection: { text: string; context: string; cfi?: string }) => void;
 }
 
-export function Viewer({ book, currentLocation, navigation, onScrollPositionChange, onTextSelect }: ViewerProps) {
+export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
   const displayPromiseRef = useRef<Promise<any> | null>(null);
-  const { setCurrentLocation } = useEpubStore();
+  const { setCurrentLocation, setSelectedText } = useEpubStore();
 
   const debouncedTextSelect = useCallback(
     debounce((selection: { text: string; context: string; cfi?: string }) => {
-      onTextSelect?.(selection);
-    }, 300),
-    [onTextSelect]
+      console.log("selected", selection);
+      setSelectedText(selection);
+    }, 100),
+    [setSelectedText]
   );
 
   useEffect(() => {
@@ -61,8 +60,6 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
 
       // Add selection event handler
       renditionRef.current.on("selected", (cfiRange: string, contents: any) => {
-        if (!onTextSelect) return;
-
         const selection = contents.window.getSelection();
         if (!selection || selection.rangeCount === 0) return;
 

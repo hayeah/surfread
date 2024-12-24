@@ -6,7 +6,7 @@ import TabContainer from "./TabContainer";
 interface AppFrameProps {
   leftDrawerContent?: React.ReactNode;
   rightDrawerContent?: React.ReactNode;
-  tabs?: Array<{
+  tabs: Array<{
     id: string;
     label: string;
     content: React.ReactNode;
@@ -42,10 +42,9 @@ const AppFrame: React.FC<AppFrameProps> = ({
         {leftDrawerContent}
       </LeftDrawer>
 
-      <main className={`flex-1 transition-all duration-300 ${
-        leftDrawerOpen ? "ml-[600px]" : "ml-0"
-      }`}>
-        <TabContainer initialTabs={tabs} />
+      <main className={`flex-1 transition-all duration-300 ${leftDrawerOpen ? "ml-[600px]" : "ml-0"
+        }`}>
+        <TabContainer tabs={tabs} />
       </main>
 
       <RightDrawer

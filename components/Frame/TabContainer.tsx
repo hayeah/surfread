@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -26,14 +26,11 @@ interface Tab {
 }
 
 interface TabContainerProps {
-  initialTabs?: Tab[];
+  tabs: Tab[];
 }
 
-const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
-  const [tabs, setTabs] = useState<Tab[]>(initialTabs || [
-    { id: "1", label: "Tab 1", content: <div>Content 1</div> },
-    { id: "2", label: "Tab 2", content: <div>Content 2</div> },
-  ]);
+const TabContainer: React.FC<TabContainerProps> = ({ tabs: propTabs }) => {
+  const [tabs, setTabs] = useState<Tab[]>(propTabs);
   const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id || "1");
   const [isDragging, setIsDragging] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
@@ -146,6 +143,12 @@ const TabContainer: React.FC<TabContainerProps> = ({ initialTabs }) => {
 
     setTabs(newTabs);
   };
+
+  useEffect(() => {
+    if (propTabs) {
+      setTabs(propTabs);
+    }
+  }, [propTabs]);
 
   return (
     <div className="flex flex-col w-full h-full">

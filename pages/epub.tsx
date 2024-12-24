@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Head from 'next/head';
 import { Dropzone } from '@/components/ui/dropzone';
 import { Outline } from '@/components/reader/outline';
@@ -21,8 +21,6 @@ const EpubReader = () => {
             book={book}
             currentLocation={currentLocation}
             navigation={navigation}
-            onScrollPositionChange={setScrollPosition}
-            onTextSelect={setSelectedText}
           />
         </div>
       )}
@@ -49,9 +47,9 @@ const EpubOutline = () => {
 };
 
 export default function EpubPage() {
-  const { book, loadLastBook } = useEpubStore();
+  const { book, selectedText, currentLocation, loadLastBook } = useEpubStore();
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadLastBook();
   }, [loadLastBook]);
 
@@ -61,9 +59,8 @@ export default function EpubPage() {
       label: "Reader",
       content: (
         <div className="p-4">
-          {"hoho"}
-          {/* <div className="text-sm text-gray-500">
-            Progress: {Math.round(scrollPosition * 100)}%
+          <div className="text-sm text-gray-500">
+            Location: {currentLocation}
           </div>
 
           {selectedText && (
@@ -77,7 +74,7 @@ export default function EpubPage() {
                 </>
               )}
             </div>
-          )} */}
+          )}
         </div>
       ),
     },
