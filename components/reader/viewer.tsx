@@ -37,9 +37,7 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
           'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           'font-size': '16px',
           'line-height': '1.6',
-          'margin': '0 auto',
-          'padding': '0 1rem'
-        }
+        },
       });
 
       // Get initial location from localStorage or hash
@@ -78,7 +76,7 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
         if (!selection || selection.rangeCount === 0) return;
 
         const selectedText = selection.toString().trim();
-        
+
         // Get the current section's content
         const section = contents.document.body;
         const walker = contents.document.createTreeWalker(
@@ -96,7 +94,7 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
         // Collect all text nodes
         const textNodes: Text[] = [];
         let currentNode: Node | null = walker.nextNode();
-        
+
         while (currentNode) {
           textNodes.push(currentNode as Text);
           currentNode = walker.nextNode();
@@ -146,23 +144,24 @@ export function Viewer({ book, currentLocation, navigation, onScrollPositionChan
     }
 
     return () => {
-    if (renditionRef.current) {
-      displayPromiseRef.current!.then(() => {
+      setTimeout(() => {
         if (renditionRef.current) {
           renditionRef.current.destroy();
         }
+      }, 1000);
+    };
+  }, [book, navigation, onTextSelect]);
+
+  useEffect(() => {
+    if (currentLocation && renditionRef.current) {
+      console.log('Navigating to:', currentLocation);
+      renditionRef.current.display(currentLocation).catch(error => {
+        console.error('Error navigating to location:', error);
       });
     }
-  };
-}, [book, navigation, onTextSelect]);
+  }, [currentLocation]);
 
-useEffect(() => {
-  if (currentLocation && renditionRef.current) {
-    renditionRef.current.display(currentLocation);
-  }
-}, [currentLocation]);
-
-return (
-  <div ref={viewerRef} className="w-full h-full bg-white" />
-);
+  return (
+    <div ref={viewerRef} className="w-full h-full bg-white" />
+  );
 }
