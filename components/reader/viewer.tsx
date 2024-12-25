@@ -47,12 +47,14 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
         const iframe = viewerRef.current?.querySelector('iframe');
         if (iframe?.contentWindow) {
           iframe.contentWindow.addEventListener('keydown', (event) => {
-            console.log('iframe keydown event:', event);
-            if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
-              event.preventDefault();
-              event.stopPropagation();
-              window.postMessage({ type: 'COMMAND_PALETTE_TOGGLE' }, '*');
-            }
+            window.dispatchEvent(new KeyboardEvent('keydown', {
+              key: event.key,
+              metaKey: event.metaKey,
+              ctrlKey: event.ctrlKey,
+              altKey: event.altKey,
+              shiftKey: event.shiftKey,
+              bubbles: true
+            }));
           });
         }
       });

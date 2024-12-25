@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Command,
   CommandDialog,
@@ -9,7 +9,8 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
+import { useCommandPaletteStore } from "@/store/commandPaletteStore";
 
 export interface CommandAction {
   id: string;
@@ -27,20 +28,13 @@ export interface CommandSection {
 }
 
 interface CommandPaletteProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onOpen: () => void;
   sections: CommandSection[];
   placeholder?: string;
 }
 
-export function CommandPalette({
-  isOpen,
-  onClose,
-  onOpen,
-  sections,
-  placeholder = "Type a command or search...",
-}: CommandPaletteProps) {
+export function CommandPalette({ sections, placeholder }: CommandPaletteProps) {
+  const { isOpen, onClose } = useCommandPaletteStore();
+
   return (
     <CommandDialog open={isOpen} onOpenChange={onClose}>
       <Command className="bg-white" shouldFilter={true} loop={true}>

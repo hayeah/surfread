@@ -5,7 +5,7 @@ import { Outline } from '@/components/reader/outline';
 import { Viewer } from '@/components/reader/viewer';
 import AppFrame from "../components/Frame/AppFrame";
 import { useEpubStore } from '@/store/epubStore';
-import { useCommandPalette } from '@/hooks/useCommandPalette';
+import { useCommandPaletteStore } from '@/store/commandPaletteStore';
 import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect;
@@ -52,11 +52,23 @@ const EpubOutline = () => {
 
 export default function EpubPage() {
   const { book, selectedText, currentLocation, loadLastBook } = useEpubStore();
-  const { isOpen, onClose, onOpen, setSelectedText: setCommandSelectedText } = useCommandPalette();
+  const { onOpen } = useCommandPaletteStore();
 
   useEffect(() => {
     loadLastBook();
   }, [loadLastBook]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        onOpen();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onOpen]);
 
   const commandSections = [
     {
@@ -66,18 +78,18 @@ export default function EpubPage() {
           id: "explain",
           title: "Explain",
           description: "Get an explanation of the selected text",
-          onSelect: () => {
+          onSelect: (e: any) => {
             // TODO: Implement explain action
-            console.log("Explain:", selectedText);
+            console.log("Explain:", selectedText, e);
           },
         },
         {
           id: "paraphrase",
           title: "Paraphrase",
           description: "Get a paraphrased version of the selected text",
-          onSelect: () => {
+          onSelect: (e: any) => {
             // TODO: Implement paraphrase action
-            console.log("Paraphrase:", selectedText);
+            console.log("Paraphrase:", selectedText, e);
           },
         },
       ],
@@ -128,9 +140,6 @@ export default function EpubPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <CommandPalette
-        isOpen={isOpen}
-        onClose={onClose}
-        onOpen={onOpen}
         sections={commandSections}
         placeholder="Search actions..."
       />
