@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Command,
   CommandDialog,
@@ -41,18 +41,6 @@ export function CommandPalette({
   sections,
   placeholder = "Type a command or search...",
 }: CommandPaletteProps) {
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        onOpen();
-      }
-    };
-
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
-  }, [onOpen]);
-
   return (
     <CommandDialog open={isOpen} onOpenChange={onClose}>
       <Command className="bg-white" shouldFilter={true} loop={true}>

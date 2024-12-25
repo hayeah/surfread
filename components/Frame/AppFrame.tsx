@@ -34,7 +34,7 @@ const AppFrame: React.FC<AppFrameProps> = ({
   }, []);
 
   return (
-    <div className="h-screen w-screen flex relative bg-gray-100">
+    <div className="h-screen w-screen flex relative bg-gray-100 z-0">
       <LeftDrawer
         isOpen={leftDrawerOpen}
         onToggle={() => setLeftDrawerOpen(!leftDrawerOpen)}

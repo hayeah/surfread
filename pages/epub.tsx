@@ -5,6 +5,8 @@ import { Outline } from '@/components/reader/outline';
 import { Viewer } from '@/components/reader/viewer';
 import AppFrame from "../components/Frame/AppFrame";
 import { useEpubStore } from '@/store/epubStore';
+import { useCommandPalette } from '@/hooks/useCommandPalette';
+import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect;
 
@@ -50,10 +52,37 @@ const EpubOutline = () => {
 
 export default function EpubPage() {
   const { book, selectedText, currentLocation, loadLastBook } = useEpubStore();
+  const { isOpen, onClose, onOpen, setSelectedText: setCommandSelectedText } = useCommandPalette();
 
   useEffect(() => {
     loadLastBook();
   }, [loadLastBook]);
+
+  const commandSections = [
+    {
+      name: "Actions",
+      items: [
+        {
+          id: "explain",
+          title: "Explain",
+          description: "Get an explanation of the selected text",
+          onSelect: () => {
+            // TODO: Implement explain action
+            console.log("Explain:", selectedText);
+          },
+        },
+        {
+          id: "paraphrase",
+          title: "Paraphrase",
+          description: "Get a paraphrased version of the selected text",
+          onSelect: () => {
+            // TODO: Implement paraphrase action
+            console.log("Paraphrase:", selectedText);
+          },
+        },
+      ],
+    },
+  ];
 
   const tabs = [
     {
@@ -98,11 +127,19 @@ export default function EpubPage() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <CommandPalette
+        isOpen={isOpen}
+        onClose={onClose}
+        onOpen={onOpen}
+        sections={commandSections}
+        placeholder="Search actions..."
+      />
       <AppFrame
         leftDrawerContent={<EpubReader />}
         rightDrawerContent={book ? <EpubOutline /> : null}
         tabs={tabs}
       />
+
     </>
   );
 }

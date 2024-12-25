@@ -41,6 +41,20 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
         },
       });
 
+      // Add keyboard event listener to the iframe's content window
+      const iframe = viewerRef.current.querySelector('iframe');
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.addEventListener('keydown', (event) => {
+          console.log('iframe keydown event:', event);
+          if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
+            event.preventDefault();
+            event.stopPropagation();
+            // Post message to parent window
+            window.postMessage({ type: 'COMMAND_PALETTE_TOGGLE' }, '*');
+          }
+        });
+      }
+
       // Get initial location from localStorage or hash
       let storedLocationString = localStorage.getItem('readerLocation');
       if (storedLocationString == "undefined") {
