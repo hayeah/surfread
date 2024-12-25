@@ -30,10 +30,15 @@ interface TabContainerProps {
 }
 
 const TabContainer: React.FC<TabContainerProps> = ({ tabs: propTabs }) => {
-  const [tabs, setTabs] = useState<Tab[]>(propTabs);
-  const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id || "1");
+  const [tabs, setTabs] = useState<Tab[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("");
   const [isDragging, setIsDragging] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
+
+  useEffect(() => {
+    setTabs(propTabs);
+    setActiveTab(propTabs[0]?.id || "");
+  }, [propTabs]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -143,12 +148,6 @@ const TabContainer: React.FC<TabContainerProps> = ({ tabs: propTabs }) => {
 
     setTabs(newTabs);
   };
-
-  useEffect(() => {
-    if (propTabs) {
-      setTabs(propTabs);
-    }
-  }, [propTabs]);
 
   return (
     <div className="flex flex-col w-full h-full">

@@ -6,6 +6,8 @@ import { Viewer } from '@/components/reader/viewer';
 import AppFrame from "../components/Frame/AppFrame";
 import { useEpubStore } from '@/store/epubStore';
 
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect;
+
 const EpubReader = () => {
   const { book, navigation, currentLocation, handleFileAccepted, setCurrentLocation, setScrollPosition, setSelectedText } = useEpubStore();
 
@@ -59,9 +61,12 @@ export default function EpubPage() {
       label: "Reader",
       content: (
         <div className="p-4">
-          <div className="text-sm text-gray-500">
-            Location: {currentLocation}
-          </div>
+          {currentLocation && (
+            <div className="mb-4">
+              <div className="text-sm font-medium text-gray-700">Current Location</div>
+              <div className="mt-1 text-sm text-gray-600">{currentLocation}</div>
+            </div>
+          )}
 
           {selectedText && (
             <div className="mt-4">
