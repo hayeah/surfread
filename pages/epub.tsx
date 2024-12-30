@@ -10,7 +10,7 @@ import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
 import { copyToClipboard } from '@/utils/clipboard';
 
 const EpubReader = () => {
-  const { book, navigation, currentLocation, handleFileAccepted, setCurrentLocation, setScrollPosition, setSelectedText } = useEpubStore();
+  const { book, navigation, currentLocation, handleFileAccepted } = useEpubStore();
 
   return (
     <div className="h-full w-full bg-white">
@@ -50,7 +50,7 @@ const EpubOutline = () => {
 };
 
 export default function EpubPage() {
-  const { book, selectedText, currentLocation, loadLastBook } = useEpubStore();
+  const { book, selectedText, currentLocation, navigation, loadLastBook } = useEpubStore();
   const { onOpen } = useCommandPaletteStore();
 
   useEffect(() => {
@@ -182,10 +182,21 @@ ${selectedText.text}
       ),
     },
     {
+      id: "navigation",
+      label: "Navigation",
+      content: <div className="p-4">
+        {navigation && (
+          <pre>
+            {JSON.stringify(navigation, null, 2)}
+          </pre>)}
+      </div>,
+    },
+    {
       id: "settings",
       label: "Settings",
       content: <div className="p-4">Reader Settings (Coming Soon)</div>,
     },
+
   ];
 
   return (
