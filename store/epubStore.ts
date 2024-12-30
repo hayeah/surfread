@@ -49,7 +49,7 @@ export const useEpubStore = create<EpubStore>((set, get) => ({
   handleFileAccepted: async (file) => {
     try {
       const arrayBuffer = await file.arrayBuffer();
-      localStorage.setItem('lastEpubFile', JSON.stringify(Array.from(new Uint8Array(arrayBuffer))));
+      // localStorage.setItem('lastEpubFile', JSON.stringify(Array.from(new Uint8Array(arrayBuffer))));
 
       const newBook = ePub(arrayBuffer);
       await newBook.ready;

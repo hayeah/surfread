@@ -157,7 +157,7 @@ export default function Home() {
       if (e.target?.result) {
         // Save the file to localStorage
         const arrayBuffer = e.target.result as ArrayBuffer;
-        localStorage.setItem('lastEpubFile', JSON.stringify(Array.from(new Uint8Array(arrayBuffer))));
+        // localStorage.setItem('lastEpubFile', JSON.stringify(Array.from(new Uint8Array(arrayBuffer))));
 
         const newBook = ePub(e.target.result);
         try {
