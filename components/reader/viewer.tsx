@@ -3,6 +3,7 @@ import { Book, Rendition, NavItem, Location } from 'epubjs';
 import { findNavItemByHref, encodeLocation, decodeLocation } from '@/lib/navigation';
 import debounce from 'lodash/debounce';
 import { useEpubStore } from '@/store/epubStore';
+import { getSelectionContext } from './getSelectionContext';
 
 interface ViewerProps {
   book: Book;
@@ -108,11 +109,4 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
   return (
     <div ref={viewerRef} className="h-full w-full" />
   );
-}
-
-function getSelectionContext(selection: Selection): string {
-  const range = selection.getRangeAt(0);
-  const container = range.commonAncestorContainer;
-  const context = container.textContent || '';
-  return context.trim();
 }
