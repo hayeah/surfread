@@ -9,7 +9,6 @@ interface OutlineProps {
 export function Outline({ toc, onChapterSelect }: OutlineProps) {
   return (
     <div className="h-full">
-      <h2 className="text-lg font-semibold mb-4 pt-4">Table of Contents</h2>
       <nav>
         {toc.map((chapter, index) => {
           const hasSubitems = chapter.subitems && chapter.subitems.length > 0;

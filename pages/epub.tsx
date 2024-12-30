@@ -1,16 +1,34 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Head from 'next/head';
 import { Dropzone } from '@/components/ui/dropzone';
-import { Outline } from '@/components/reader/outline';
 import { Viewer } from '@/components/reader/viewer';
 import AppFrame from "../components/Frame/AppFrame";
 import { useEpubStore } from '@/store/epubStore';
 import { useCommandPaletteStore } from '@/store/commandPaletteStore';
 import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
 import { copyToClipboard } from '@/utils/clipboard';
+import { FloatingOutline } from '@/components/reader/FloatingOutline';
 
 const EpubReader = () => {
   const { book, navigation, currentLocation, handleFileAccepted } = useEpubStore();
+  const [isOutlineOpen, setIsOutlineOpen] = useState(false);
+
+  const handleCloseOutline = useCallback(() => {
+    setIsOutlineOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleCloseOutline();
+      }
+    };
+
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [handleCloseOutline]);
 
   return (
     <div className="h-full w-full bg-white">
@@ -20,6 +38,21 @@ const EpubReader = () => {
         </div>
       ) : (
         <div className="h-full relative">
+          <button
+            onClick={() => setIsOutlineOpen(!isOutlineOpen)}
+            className="fixed left-4 top-4 z-50 p-2 bg-white rounded-md shadow-md hover:bg-gray-100 outline-toggle"
+            title="Toggle Contents"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          <FloatingOutline
+            isOpen={isOutlineOpen}
+            onClose={handleCloseOutline}
+          />
+
           <Viewer
             book={book}
             currentLocation={currentLocation}
@@ -27,24 +60,6 @@ const EpubReader = () => {
           />
         </div>
       )}
-    </div>
-  );
-};
-
-const EpubOutline = () => {
-  const { navigation, setCurrentLocation, closeBook } = useEpubStore();
-
-  return (
-    <div className="h-full w-full bg-white">
-      <div className="p-4 border-b">
-        <button
-          onClick={closeBook}
-          className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-        >
-          Close Book
-        </button>
-      </div>
-      <Outline toc={navigation} onChapterSelect={setCurrentLocation} />
     </div>
   );
 };
@@ -213,7 +228,6 @@ ${selectedText.text}
       />
       <AppFrame
         leftDrawerContent={<EpubReader />}
-        rightDrawerContent={book ? <EpubOutline /> : null}
         tabs={tabs}
       />
 
