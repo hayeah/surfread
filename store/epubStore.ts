@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import ePub, { Book, NavItem } from 'epubjs';
+import { EpubIndexedDB } from './epubIndexedDB';
 
 interface EpubStore {
   book: Book | null;
@@ -31,48 +32,47 @@ export const useEpubStore = create<EpubStore>((set, get) => ({
   setSelectedText: (selectedText) => set({ selectedText }),
 
   loadLastBook: async () => {
-    const lastFile = localStorage.getItem('lastEpubFile');
-    if (lastFile) {
-      try {
-        const arrayBuffer = new Uint8Array(JSON.parse(lastFile)).buffer;
+    try {
+      const epubDB = await EpubIndexedDB.singleton();
+      const arrayBuffer = await epubDB.getLastEpub();
+      if (arrayBuffer) {
         const newBook = ePub(arrayBuffer);
         await newBook.ready;
         const nav = newBook.navigation.toc;
         set({ book: newBook, navigation: nav });
-      } catch (error) {
-        console.error('Error loading EPUB from localStorage:', error);
-        localStorage.removeItem('lastEpubFile');
       }
+    } catch (error) {
+      console.error('Error loading EPUB from IndexedDB:', error);
+      const epubDB = await EpubIndexedDB.singleton();
+      await epubDB.clearLastEpub();
     }
   },
 
   handleFileAccepted: async (file) => {
     try {
       const arrayBuffer = await file.arrayBuffer();
-      // localStorage.setItem('lastEpubFile', JSON.stringify(Array.from(new Uint8Array(arrayBuffer))));
-
       const newBook = ePub(arrayBuffer);
       await newBook.ready;
       const nav = newBook.navigation.toc;
       set({ book: newBook, navigation: nav });
+
+      // Save to IndexedDB
+      const epubDB = await EpubIndexedDB.singleton();
+      await epubDB.saveEpub(arrayBuffer);
     } catch (error) {
       console.error('Error loading EPUB:', error);
     }
   },
 
-  closeBook: () => {
+  closeBook: async () => {
     const { book } = get();
     if (book) {
       book.destroy();
     }
-    set({
-      book: null,
-      navigation: [],
-      currentLocation: undefined,
-      scrollPosition: 0,
-      selectedText: null
-    });
-    localStorage.removeItem('lastEpubFile');
-    localStorage.removeItem('readerLocation');
+
+    const epubDB = await EpubIndexedDB.singleton();
+    await epubDB.clearLastEpub();
+
+    set({ book: null, navigation: [], currentLocation: undefined, scrollPosition: 0, selectedText: null });
   },
 }));
