@@ -8,7 +8,7 @@ interface OutlineProps {
 
 export function Outline({ toc, onChapterSelect }: OutlineProps) {
   return (
-    <div className="p-4">
+    <div>
       <h2 className="text-lg font-semibold mb-4">Table of Contents</h2>
       <nav>
         {toc.map((chapter, index) => {
