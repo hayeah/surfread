@@ -20,7 +20,7 @@ const RightDrawer: React.FC<RightDrawerProps> = ({ isOpen, onToggle, children })
           position="right"
           className="absolute right-4 top-4"
         />
-        <div className="p-4">{children}</div>
+        <div className="h-full overflow-y-auto p-4">{children}</div>
       </div>
 
       {/* Handle for opening the drawer */}
