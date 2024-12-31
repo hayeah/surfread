@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import Head from 'next/head';
 import { Dropzone } from '@/components/ui/dropzone';
 import { Viewer } from '@/components/reader/viewer';
@@ -6,8 +6,9 @@ import AppFrame from "../components/Frame/AppFrame";
 import { useEpubStore } from '@/store/epubStore';
 import { useCommandPaletteStore } from '@/store/commandPaletteStore';
 import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
-import { copyToClipboard } from '@/utils/clipboard';
 import { FloatingOutline } from '@/components/reader/FloatingOutline';
+import { useChat } from '@/hooks/useChat';
+import { ChatBox } from '@/components/ChatBox';
 
 const EpubReader = () => {
   const { book, navigation, currentLocation, handleFileAccepted } = useEpubStore();
@@ -64,9 +65,40 @@ const EpubReader = () => {
   );
 };
 
+interface ChatTab {
+  id: string;
+  prompt: string;
+}
+
+
 export default function EpubPage() {
   const { selectedText, currentLocation, navigation, loadLastBook } = useEpubStore();
+  const [chatTabs, setChatTabs] = useState<ChatTab[]>([]);
   const { onOpen } = useCommandPaletteStore();
+
+  const createChatTab = (prompt: string) => {
+    const id = `chat-${Date.now()}`;
+    setChatTabs(prev => [...prev, { id, prompt }]);
+  };
+  const ChatTabComponent = ({ prompt }: { prompt: string }) => {
+    const { messages, sendMessage, isLoading } = useChat();
+
+    useEffect(() => {
+      if (prompt && messages.length === 0) {
+        sendMessage(prompt);
+      }
+    }, [prompt, messages.length, sendMessage]);
+
+    return (
+      <ChatBox
+        messages={messages}
+        onSendMessage={sendMessage}
+        isLoading={isLoading}
+        className="h-full"
+      />
+    );
+  };
+
 
   useEffect(() => {
     loadLastBook();
@@ -112,7 +144,8 @@ ${selectedText.text}
 ${selectedText.context}
 `;
 
-            copyToClipboard(prompt.trim());
+            createChatTab(prompt.trim());
+            // copyToClipboard(prompt.trim());
           },
         },
         {
@@ -136,14 +169,15 @@ Distill the given text content in a more **engaging and readable style** (simila
 ${selectedText.text}
 `;
 
-            copyToClipboard(prompt.trim());
+            createChatTab(prompt.trim());
+            // copyToClipboard(prompt.trim());
           },
         },
       ],
     },
   ];
 
-  const tabs = [
+  const tabs = useMemo(() => [
     {
       id: "reader",
       label: "Usage Guide",
@@ -154,7 +188,12 @@ ${selectedText.text}
         </div>
       ),
     },
-  ];
+    ...chatTabs.map(tab => ({
+      id: tab.id,
+      label: 'Chat',
+      content: <ChatTabComponent prompt={tab.prompt} />,
+    })),
+  ], [chatTabs]);
 
   return (
     <>
