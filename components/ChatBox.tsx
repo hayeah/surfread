@@ -65,7 +65,7 @@ export function ChatBox({ sessionId, className = '' }: ChatBoxProps) {
 
   const scrollToBottom = () => {
     if (shouldAutoScroll) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current?.scrollIntoView();
     }
   };
 
