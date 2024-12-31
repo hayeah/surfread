@@ -1,16 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChatBox } from '../components/ChatBox';
-import { useChat } from '../hooks/useChat';
+import { useChatStore } from '../store/chatStore';
 
-function ChatTab() {
-  // Call useChat in a stable, top-level place
-  const { messages, sendMessage, isLoading } = useChat();
-
+function ChatTab({ sessionId }: { sessionId: string }) {
   return (
     <ChatBox
-      messages={messages}
-      onSendMessage={sendMessage}
-      isLoading={isLoading}
+      sessionId={sessionId}
       className="h-full"
     />
   );
@@ -18,11 +13,18 @@ function ChatTab() {
 
 export default function ChatPage() {
   const [activeTab, setActiveTab] = useState(0);
-  // Instead of storing the hook's return value, store just IDs for each tab
-  const [tabs, setTabs] = useState([0]);
+  const [tabs, setTabs] = useState(['chat-0']);
+  const createSession = useChatStore((state) => state.createSession);
+
+  // Initialize first session
+  useEffect(() => {
+    createSession('chat-0');
+  }, [createSession]);
 
   const createNewTab = () => {
-    setTabs(prev => [...prev, prev.length]);
+    const newSessionId = `chat-${tabs.length}`;
+    createSession(newSessionId);
+    setTabs(prev => [...prev, newSessionId]);
     setActiveTab(tabs.length); // Switch to new tab
   };
 
@@ -37,29 +39,21 @@ export default function ChatPage() {
           >
             +
           </button>
-          {tabs.map((tabId, index) => (
+          {tabs.map((sessionId, index) => (
             <button
-              key={tabId}
+              key={sessionId}
               onClick={() => setActiveTab(index)}
               className={`px-4 py-2 rounded-lg ${activeTab === index
-                ? 'bg-blue-500 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
             >
               Chat {index + 1}
             </button>
           ))}
         </div>
-
-        <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
-          {tabs.map((tabId, index) => (
-            <div
-              key={tabId}
-              className={`${index === activeTab ? 'col-span-2' : 'hidden'} flex-1 min-h-0`}
-            >
-              <ChatTab />
-            </div>
-          ))}
+        <div className="flex-1 min-h-0">
+          <ChatTab sessionId={tabs[activeTab]} />
         </div>
       </div>
     </div>

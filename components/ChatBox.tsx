@@ -46,20 +46,17 @@
 import { LucideArrowDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Message } from '../types/chat';
+import { useChatStore } from '../store/chatStore';
 
 interface ChatBoxProps {
-  /** Array of messages to display */
-  messages: Message[];
-  /** Callback function to handle sending new messages */
-  onSendMessage: (content: string) => void;
-  /** Whether the chat is currently loading/processing a message */
-  isLoading?: boolean;
-  /** Additional CSS classes to apply to the container */
+  sessionId: string;
   className?: string;
 }
 
-export function ChatBox({ messages, onSendMessage, isLoading = false, className = '' }: ChatBoxProps) {
+export function ChatBox({ sessionId, className = '' }: ChatBoxProps) {
+  const session = useChatStore((state) => state.sessions[sessionId]);
+  const sendMessage = useChatStore((state) => state.sendMessage);
+
   const [input, setInput] = useState('');
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -79,7 +76,7 @@ export function ChatBox({ messages, onSendMessage, isLoading = false, className 
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, shouldAutoScroll]);
+  }, [session?.messages, shouldAutoScroll]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -110,17 +107,18 @@ export function ChatBox({ messages, onSendMessage, isLoading = false, className 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    const content = input.trim();
+    if (!content || session?.isLoading) return;
 
-    onSendMessage(input);
+    sendMessage(sessionId, content);
     setInput('');
     setShouldAutoScroll(true);
   };
 
   return (
     <div className={`flex flex-col bg-white shadow-lg rounded-lg overflow-hidden ${className}`}>
-      <div className="flex-1 overflow-y-auto p-4 min-h-0" ref={scrollContainerRef}>
-        {messages.map((message, index) => {
+      <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollContainerRef}>
+        {session?.messages.map((message, index) => {
           const isUser = message.role === 'user';
 
           if (isUser) {
@@ -155,14 +153,14 @@ export function ChatBox({ messages, onSendMessage, isLoading = false, className 
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={isLoading}
+            placeholder="Type a message..."
+            className="flex-1 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={session?.isLoading}
           />
           <button
             type="submit"
-            disabled={isLoading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={session?.isLoading}
           >
             Send
           </button>
