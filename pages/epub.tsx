@@ -65,7 +65,7 @@ const EpubReader = () => {
 };
 
 export default function EpubPage() {
-  const { book, selectedText, currentLocation, navigation, loadLastBook } = useEpubStore();
+  const { selectedText, currentLocation, navigation, loadLastBook } = useEpubStore();
   const { onOpen } = useCommandPaletteStore();
 
   useEffect(() => {
@@ -116,34 +116,9 @@ ${selectedText.context}
           },
         },
         {
-          id: "paraphrase",
-          title: "Paraphrase",
-          description: "Get a paraphrased version of the selected text",
-          onSelect: () => {
-            if (!selectedText?.text) return;
-
-            const prompt = `
-Rewrite the given text content in a more **engaging and readable style** (similar to ChatGPT LISTICLE responses). Avoid making it sound like an academic abstract. Instead:
-
-1. Start with a **clear general overview**.
-2. Break down the main ideas into **specific points** for better readability. Use list nesting for better structure.
-3. Provide a **summary or conclusion** to wrap up the key points effectively.
-4. Write a style that's clear, erudite, assuming a good education, not dumbed down. Visually accessible.
-5. Don't feel restricted by the order/structure of the original text **prioritize clarity and flow**.
-6. Output more text if you need more tokens to capture more ideas.
-
-------
-
-${selectedText.text}
-`;
-
-            copyToClipboard(prompt.trim());
-          },
-        },
-        {
-          id: "outline",
-          title: "Outline",
-          description: "Get a concise outline of the selected text",
+          id: "distill",
+          title: "Distill",
+          description: "Distill the content into listicle",
           onSelect: () => {
             if (!selectedText?.text) return;
 
@@ -171,47 +146,14 @@ ${selectedText.text}
   const tabs = [
     {
       id: "reader",
-      label: "Reader",
+      label: "Usage Guide",
       content: (
         <div className="p-4">
-          {currentLocation && (
-            <div className="mb-4">
-              <div className="text-sm font-medium text-gray-700">Current Location</div>
-              <div className="mt-1 text-sm text-gray-600">{currentLocation}</div>
-            </div>
-          )}
-
-          {selectedText && (
-            <div className="mt-4">
-              <div className="text-sm font-medium text-gray-700">Selected Text</div>
-              <div className="mt-1 text-sm text-gray-600">{selectedText.text}</div>
-              {selectedText.context && (
-                <>
-                  <div className="mt-2 text-sm font-medium text-gray-700">Context</div>
-                  <div className="mt-1 text-sm text-gray-500">{selectedText.context}</div>
-                </>
-              )}
-            </div>
-          )}
+          <h2 className="text-2xl font-bold mb-4">Usage Guide</h2>
+          <p className="mb-4 text-gray-700">This is an example of how to use the Epub Reader.</p>
         </div>
       ),
     },
-    {
-      id: "navigation",
-      label: "Navigation",
-      content: <div className="p-4">
-        {navigation && (
-          <pre>
-            {JSON.stringify(navigation, null, 2)}
-          </pre>)}
-      </div>,
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      content: <div className="p-4">Reader Settings (Coming Soon)</div>,
-    },
-
   ];
 
   return (

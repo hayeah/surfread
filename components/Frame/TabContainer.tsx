@@ -204,14 +204,6 @@ const TabContainer: React.FC<TabContainerProps> = ({ tabs: propTabs }) => {
                 >
                   {tab.content}
                 </div>
-                {activeTab === tab.id && (
-                  <ChatInput
-                    onSend={(message) => {
-                      console.log(`Message from tab ${tab.id}:`, message);
-                      // Handle the message here
-                    }}
-                  />
-                )}
               </div>
             ))}
           </div>
