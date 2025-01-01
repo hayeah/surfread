@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Head from 'next/head';
 import { Dropzone } from '@/components/ui/dropzone';
 import { Viewer } from '@/components/reader/viewer';
@@ -10,6 +10,65 @@ import { FloatingOutline } from '@/components/reader/FloatingOutline';
 import { useChat } from '@/hooks/useChat';
 import { ChatBox } from '@/components/ChatBox';
 import { copyToClipboard } from '@/utils/clipboard';
+
+const ReadingGuide = () => {
+  const [position, setPosition] = useState(window.innerHeight / 2);
+  const [isDragging, setIsDragging] = useState(false);
+  const guideRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging && guideRef.current) {
+        const newPosition = e.clientY;
+        setPosition(newPosition);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  return (
+    <div
+      ref={guideRef}
+      style={{
+        position: 'fixed',
+        left: 0,
+        top: position - 25,
+        width: '100%',
+        height: '50px',
+        cursor: isDragging ? 'grabbing' : 'grab',
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center',
+      }}
+      onMouseDown={handleMouseDown}
+    >
+      <div
+        style={{
+          width: '100%',
+          height: '5px',
+          backgroundColor: 'rgba(128, 128, 128, 0.05)',
+        }}
+      />
+    </div>
+  );
+};
 
 const EpubReader = () => {
   const { book, navigation, currentLocation, handleFileAccepted } = useEpubStore();
@@ -54,6 +113,8 @@ const EpubReader = () => {
             isOpen={isOutlineOpen}
             onClose={handleCloseOutline}
           />
+
+          <ReadingGuide />
 
           <Viewer
             book={book}

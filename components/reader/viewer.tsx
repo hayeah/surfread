@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { Book, Rendition, NavItem, Location } from 'epubjs';
 import { findNavItemByHref, encodeLocation, decodeLocation } from '@/lib/navigation';
 import debounce from 'lodash/debounce';
@@ -107,6 +107,7 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
   }, [currentLocation]);
 
   return (
-    <div ref={viewerRef} className="h-full w-full" />
+    <div className="relative h-full w-full" ref={viewerRef}>
+    </div>
   );
 }
