@@ -9,6 +9,7 @@ import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
 import { FloatingOutline } from '@/components/reader/FloatingOutline';
 import { useChat } from '@/hooks/useChat';
 import { ChatBox } from '@/components/ChatBox';
+import { copyToClipboard } from '@/utils/clipboard';
 
 const EpubReader = () => {
   const { book, navigation, currentLocation, handleFileAccepted } = useEpubStore();
@@ -72,7 +73,7 @@ interface ChatTab {
 
 
 export default function EpubPage() {
-  const { selectedText, currentLocation, navigation, loadLastBook } = useEpubStore();
+  const { selectedText, currentLocation, navigation, loadLastBook, closeBook } = useEpubStore();
   const [chatTabs, setChatTabs] = useState<ChatTab[]>([]);
   const { onOpen } = useCommandPaletteStore();
 
@@ -144,8 +145,8 @@ ${selectedText.text}
 ${selectedText.context}
 `;
 
-            createChatTab(prompt.trim());
-            // copyToClipboard(prompt.trim());
+            // createChatTab(prompt.trim());
+            copyToClipboard(prompt.trim());
           },
         },
         {
@@ -169,8 +170,8 @@ Distill the given text content in a more **engaging and readable style** (simila
 ${selectedText.text}
 `;
 
-            createChatTab(prompt.trim());
-            // copyToClipboard(prompt.trim());
+            // createChatTab(prompt.trim());
+            copyToClipboard(prompt.trim());
           },
         },
       ],
@@ -210,6 +211,18 @@ ${selectedText.text}
       <AppFrame
         leftDrawerContent={<EpubReader />}
         tabs={tabs}
+        rightDrawerContent={
+          // close button for right drawer
+          <button
+            onClick={() => closeBook()}
+            className="fixed right-4 top-4 z-50 p-2 bg-white rounded-md shadow-md hover:bg-gray-100 outline-toggle"
+            title="Close Book"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        }
       />
 
     </>
