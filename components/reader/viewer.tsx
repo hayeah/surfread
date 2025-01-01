@@ -107,7 +107,14 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
   }, [currentLocation]);
 
   return (
-    <div className="relative h-full w-full" ref={viewerRef}>
+    <div className="h-full w-full flex flex-col overflow-y-auto">
+      <div className="flex-grow" ref={viewerRef}></div>
+      <div className="h-[400px] flex flex-col items-center justify-center text-gray-100 text-3xl select-none space-y-4 py-8">
+        <span>•</span>
+        <span>•</span>
+        <span>•</span>
+      </div>
     </div>
+
   );
 }
