@@ -1,7 +1,13 @@
+interface EpubEntry {
+  title: string;
+  data: ArrayBuffer;
+  timestamp: number;
+}
+
 export class EpubIndexedDB {
   private static readonly DB_NAME = 'epubStorage';
   private static readonly STORE_NAME = 'epubs';
-  private static readonly DB_VERSION = 1;
+  private static readonly DB_VERSION = 2;
   private static instance: EpubIndexedDB | null = null;
 
   private constructor(private readonly db: IDBDatabase) { }
@@ -39,15 +45,55 @@ export class EpubIndexedDB {
     });
   }
 
-  async saveEpub(arrayBuffer: ArrayBuffer): Promise<void> {
-    await this.tx('readwrite', (store) => store.put(arrayBuffer, 'lastEpub'));
+  // Convert title to URL-friendly string
+  public titleToKey(title: string): string {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
   }
 
+  async saveEpub(title: string, arrayBuffer: ArrayBuffer): Promise<void> {
+    const key = this.titleToKey(title);
+    const entry: EpubEntry = {
+      title,
+      data: arrayBuffer,
+      timestamp: Date.now(),
+    };
+    await this.tx('readwrite', (store) => store.put(entry, key));
+  }
+
+  async getEpub(key: string): Promise<EpubEntry | null> {
+    return this.tx('readonly', (store) => store.get(key));
+  }
+
+  // Just get all records in the store:
+  async getAllEpubs(): Promise<EpubEntry[]> {
+    return this.tx('readonly', (store) => {
+      // getAll() returns an IDBRequest<EpubEntry[]>, which is
+      // exactly what the tx() helper expects.
+      return store.getAll() as IDBRequest<EpubEntry[]>;
+    });
+  }
+
+  async deleteEpub(key: string): Promise<void> {
+    await this.tx('readwrite', (store) => store.delete(key));
+  }
+
+  // For backward compatibility
   async getLastEpub(): Promise<ArrayBuffer | null> {
-    return this.tx('readonly', (store) => store.get('lastEpub') || null);
+    const epubs = await this.getAllEpubs();
+    if (epubs.length === 0) return null;
+
+    // Get the most recently added epub
+    const latest = epubs.reduce((latest, current) =>
+      current.timestamp > latest.timestamp ? current : latest
+    );
+    return latest.data;
   }
 
+  // For backward compatibility
   async clearLastEpub(): Promise<void> {
-    await this.tx('readwrite', (store) => store.delete('lastEpub'));
+    // No-op since we don't have a single "last" epub anymore
   }
 }
