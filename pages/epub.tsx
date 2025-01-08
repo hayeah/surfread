@@ -10,6 +10,7 @@ import { FloatingOutline } from '@/components/reader/FloatingOutline';
 import { useChat } from '@/hooks/useChat';
 import { ChatBox } from '@/components/ChatBox';
 import { copyToClipboard } from '@/utils/clipboard';
+import { useRouter } from 'next/router';
 
 const ReadingGuide = () => {
   const [position, setPosition] = useState(window.innerHeight / 2);
@@ -71,8 +72,18 @@ const ReadingGuide = () => {
 };
 
 const EpubReader = () => {
+  const router = useRouter();
   const { book, navigation, currentLocation, handleFileAccepted, availableBooks, loadBook, deleteBook } = useEpubStore();
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
+
+  console.log('currentLocation', currentLocation);
+
+  useEffect(() => {
+    const bookKey = router.query.book;
+    if (typeof bookKey === 'string' && !book) {
+      loadBook(bookKey);
+    }
+  }, [router.query.book, loadBook]);
 
   const handleCloseOutline = useCallback(() => {
     setIsOutlineOpen(false);
@@ -92,7 +103,9 @@ const EpubReader = () => {
   }, [handleCloseOutline]);
 
   const handleBookClick = (key: string) => {
-    loadBook(key);
+    loadBook(key).then(() => {
+      router.push(`/epub?book=${key}`, undefined, { shallow: true });
+    });
   };
 
   const handleDeleteClick = (e: React.MouseEvent, key: string) => {

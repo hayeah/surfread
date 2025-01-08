@@ -57,7 +57,7 @@ export const useEpubStore = create<EpubStore>((set, get) => ({
         const newBook = ePub(entry.data);
         await newBook.ready;
         const nav = newBook.navigation.toc;
-        set({ book: newBook, navigation: nav });
+        set({ book: newBook, navigation: nav, currentLocation: undefined, selectedText: null });
       }
     } catch (error) {
       console.error('Error loading EPUB:', error);

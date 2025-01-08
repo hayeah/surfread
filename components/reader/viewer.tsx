@@ -60,22 +60,22 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
         }
       });
 
-      // Get initial location from localStorage or hash
-      let storedLocationString = localStorage.getItem('readerLocation');
-      if (storedLocationString == "undefined") {
-        storedLocationString = "null";
-      }
-      const storedLocation = storedLocationString ? JSON.parse(storedLocationString) : undefined;
-      const initialHash = window.location.hash.slice(1);
-      const initialLocation = storedLocation || (initialHash ? decodeLocation(navigation, initialHash) : undefined);
+      // // Get initial location from localStorage or hash
+      // let storedLocationString = localStorage.getItem('readerLocation');
+      // if (storedLocationString == "undefined") {
+      //   storedLocationString = "null";
+      // }
+      // const storedLocation = storedLocationString ? JSON.parse(storedLocationString) : undefined;
+      // const initialHash = window.location.hash.slice(1);
+      // const initialLocation = storedLocation || (initialHash ? decodeLocation(navigation, initialHash) : undefined);
 
-      displayPromiseRef.current = renditionRef.current.display(initialLocation);
+      displayPromiseRef.current = renditionRef.current.display();
 
-      // Track current location when navigating
-      renditionRef.current.on("locationChanged", (location: Location) => {
-        localStorage.setItem('readerLocation', JSON.stringify(location.start));
-        setCurrentLocation(location.start.href);
-      });
+      // // Track current location when navigating
+      // renditionRef.current.on("locationChanged", (location: Location) => {
+      //   localStorage.setItem('readerLocation', JSON.stringify(location.start));
+      //   setCurrentLocation(location.start.href);
+      // });
 
       // Add selection event handler
       renditionRef.current.on("selected", (cfiRange: string, contents: any) => {
