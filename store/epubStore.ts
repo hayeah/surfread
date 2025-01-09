@@ -11,9 +11,8 @@ async function getStore(): Promise<EpubPgliteStore> {
   return storePromise;
 }
 
-
 interface ReaderState {
-  id: number;
+  bookID: number;
   epub: Book;
   toc: NavItem[];
   currentLocation: string | undefined;
@@ -26,6 +25,7 @@ interface EpubStore {
 
   // Action methods
   setCurrentLocation(location: string): void;
+  saveProgress(location: string): Promise<void>;
   setSelectedText(
     selection: { text: string; context: string; cfi?: string } | null
   ): void;
@@ -44,7 +44,6 @@ export const useEpubStore = create<EpubStore>()(
     reader: null,
     availableBooks: [],
 
-
     setCurrentLocation: async (currentLocation) => {
       set((state) => {
         if (state.reader) {
@@ -52,9 +51,19 @@ export const useEpubStore = create<EpubStore>()(
         }
       });
 
-      const { id } = get().reader!;
+      const { saveProgress } = get();
+      await saveProgress(currentLocation);
+
+      // const store = await getStore();
+      // store.setReadingProgress(id, currentLocation);
+    },
+
+    saveProgress: async (location) => {
+      const reader = get().reader;
+      if (!reader) return;
+
       const store = await getStore();
-      store.setReadingProgress(id, currentLocation);
+      store.setReadingProgress(reader.bookID, location);
     },
 
     setSelectedText: (selectedText) => {
@@ -94,7 +103,7 @@ export const useEpubStore = create<EpubStore>()(
 
           set((state) => {
             state.reader = {
-              id,
+              bookID: id,
               epub: newBook,
               toc: nav.toc,
               currentLocation: progress || undefined,

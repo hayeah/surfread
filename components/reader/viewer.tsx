@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
-import { Book, Rendition, NavItem, Location } from 'epubjs';
-import { findNavItemByHref, encodeLocation, decodeLocation } from '@/lib/navigation';
+import { useEffect, useRef } from 'react';
+import { Book, Rendition, NavItem } from 'epubjs';
 import debounce from 'lodash/debounce';
 import { useEpubStore } from '@/store/epubStore';
 import { getSelectionContext } from './getSelectionContext';
@@ -11,19 +10,11 @@ interface ViewerProps {
   navigation: NavItem[];
 }
 
-export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
+export function Viewer({ book, currentLocation }: ViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
   const displayPromiseRef = useRef<Promise<any> | null>(null);
-  const { setCurrentLocation, setSelectedText } = useEpubStore();
-
-  const debouncedTextSelect = useCallback(
-    debounce((selection: { text: string; context: string; cfi?: string }) => {
-      console.log("selected", selection);
-      setSelectedText(selection);
-    }, 100),
-    [setSelectedText]
-  );
+  const { setCurrentLocation, setSelectedText, saveProgress } = useEpubStore();
 
   useEffect(() => {
     if (viewerRef.current && book) {
@@ -60,24 +51,18 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
         }
       });
 
-      // // Get initial location from localStorage or hash
-      // let storedLocationString = localStorage.getItem('readerLocation');
-      // if (storedLocationString == "undefined") {
-      //   storedLocationString = "null";
-      // }
-      // const storedLocation = storedLocationString ? JSON.parse(storedLocationString) : undefined;
-      // const initialHash = window.location.hash.slice(1);
-      // const initialLocation = storedLocation || (initialHash ? decodeLocation(navigation, initialHash) : undefined);
-
       displayPromiseRef.current = renditionRef.current.display();
 
-      // // Track current location when navigating
-      // renditionRef.current.on("locationChanged", (location: Location) => {
-      //   localStorage.setItem('readerLocation', JSON.stringify(location.start));
-      //   setCurrentLocation(location.start.href);
-      // });
+      const debounceSaveProgress = debounce(saveProgress, 300);
+
+      // Save location to db without updating current location in store
+      renditionRef.current.on("locationChanged", (location: any) => {
+        debounceSaveProgress(location.start);
+      });
 
       // Add selection event handler
+      const debounceSelectText = debounce(setSelectedText, 300);
+
       renditionRef.current.on("selected", (cfiRange: string, contents: any) => {
         const selection = contents.window.getSelection();
         if (!selection || selection.rangeCount === 0) return;
@@ -85,7 +70,7 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
         const selectedText = selection.toString().trim();
         if (!selectedText) return;
 
-        debouncedTextSelect({
+        debounceSelectText({
           text: selectedText,
           context: getSelectionContext(selection),
           cfi: cfiRange
@@ -98,7 +83,7 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
         }
       };
     }
-  }, [book, navigation, debouncedTextSelect, setCurrentLocation]);
+  }, [book]);
 
   useEffect(() => {
     if (currentLocation && renditionRef.current) {
@@ -107,14 +92,7 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
   }, [currentLocation]);
 
   return (
-    <div className="h-full w-full flex flex-col overflow-y-auto">
-      <div className="flex-grow" ref={viewerRef}></div>
-      <div className="h-[400px] flex flex-col items-center justify-center text-gray-100 text-3xl select-none space-y-4 py-8">
-        <span>•</span>
-        <span>•</span>
-        <span>•</span>
-      </div>
-    </div>
-
+    // IMPORTANT: The width and height must be set to 100%, else locationChanged event will not be triggered
+    <div className="h-full w-full" ref={viewerRef}></div>
   );
 }
