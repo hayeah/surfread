@@ -1,97 +1,140 @@
 import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
 import ePub, { Book, NavItem } from 'epubjs';
-import { EpubIndexedDB } from './epubIndexedDB';
+import { EpubPgliteStore } from './epubPgliteStore';
 
-interface EpubStore {
-  book: Book | null;
-  navigation: NavItem[];
-  currentLocation: string | undefined;
-  scrollPosition: number;
-  selectedText: { text: string; context: string; cfi?: string } | null;
-  availableBooks: { key: string; title: string; timestamp: number }[];
-  setBook: (book: Book) => void;
-  setNavigation: (nav: NavItem[]) => void;
-  setCurrentLocation: (location: string) => void;
-  setScrollPosition: (position: number) => void;
-  setSelectedText: (selection: { text: string; context: string; cfi?: string } | null) => void;
-  // loadLastBook: () => Promise<void>;
-  loadBook: (key: string) => Promise<void>;
-  handleFileAccepted: (file: File) => Promise<void>;
-  closeBook: () => void;
-  refreshAvailableBooks: () => Promise<void>;
-  deleteBook: (key: string) => Promise<void>;
+let storePromise: Promise<EpubPgliteStore> | null = null;
+async function getStore(): Promise<EpubPgliteStore> {
+  if (!storePromise) {
+    storePromise = EpubPgliteStore.init('idb://my-pgdata');
+  }
+  return storePromise;
 }
 
-export const useEpubStore = create<EpubStore>((set, get) => ({
-  book: null,
-  navigation: [],
-  currentLocation: undefined,
-  scrollPosition: 0,
-  selectedText: null,
-  availableBooks: [],
 
-  setBook: (book) => set({ book }),
-  setNavigation: (navigation) => set({ navigation }),
-  setCurrentLocation: (currentLocation) => set({ currentLocation }),
-  setScrollPosition: (scrollPosition) => set({ scrollPosition }),
-  setSelectedText: (selectedText) => set({ selectedText }),
+interface CurrentBook {
+  id: number;
+  book: Book;
+  toc: NavItem[];
+  currentLocation: string | undefined;
+  selectedText: { text: string; context: string; cfi?: string } | null;
+}
 
-  refreshAvailableBooks: async () => {
-    const epubDB = await EpubIndexedDB.singleton();
-    const epubs = await epubDB.getAllEpubs();
-    console.log(epubs);
-    set({
-      availableBooks: epubs.map(({ title, timestamp }) => ({
-        key: epubDB.titleToKey(title),
-        title,
-        timestamp,
-      })),
-    });
-  },
+interface EpubStore {
+  book: CurrentBook | null;
+  availableBooks: { id: number; title: string; timestamp: Date }[];
 
-  loadBook: async (key: string) => {
-    try {
-      const epubDB = await EpubIndexedDB.singleton();
-      const entry = await epubDB.getEpub(key);
-      if (entry) {
-        const newBook = ePub(entry.data);
-        await newBook.ready;
-        const nav = newBook.navigation.toc;
-        set({ book: newBook, navigation: nav });
+  // Action methods
+  setCurrentLocation(location: string): void;
+  setSelectedText(
+    selection: { text: string; context: string; cfi?: string } | null
+  ): void;
+  loadBook(id: number): Promise<void>;
+  handleFileAccepted(file: File): Promise<void>;
+  closeBook(): void;
+  refreshAvailableBooks(): Promise<void>;
+  deleteBook(id: number): Promise<void>;
+}
+
+//
+// 3. Create the store with Immer
+//
+export const useEpubStore = create<EpubStore>()(
+  immer((set, get): EpubStore => ({
+    book: null,
+    availableBooks: [],
+
+
+    setCurrentLocation: (currentLocation) => {
+      set((state) => {
+        if (state.book) {
+          state.book.currentLocation = currentLocation;
+        }
+      });
+      const { book } = get().book || {};
+      if (book && currentLocation) {
+        getStore().then((store) => {
+          store.setReadingProgress(Number(book.key), currentLocation);
+        });
       }
-    } catch (error) {
-      console.error('Error loading EPUB:', error);
-    }
-  },
+    },
 
-  handleFileAccepted: async (file: File) => {
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      // Save to IndexedDB
-      const epubDB = await EpubIndexedDB.singleton();
-      const title = file.name.replace(/\.epub$/, '');
-      await epubDB.saveEpub(title, arrayBuffer);
-      await get().refreshAvailableBooks();
-    } catch (error) {
-      console.error('Error loading EPUB:', error);
-    }
-  },
+    setSelectedText: (selectedText) => {
+      set((state) => {
+        if (state.book) {
+          state.book.selectedText = selectedText;
+        }
+      });
+    },
 
-  deleteBook: async (key: string) => {
-    try {
-      const epubDB = await EpubIndexedDB.singleton();
-      await epubDB.deleteEpub(key);
-      await get().refreshAvailableBooks();
-    } catch (error) {
-      console.error('Error deleting EPUB:', error);
-    }
-  },
+    refreshAvailableBooks: async () => {
+      const store = await getStore();
+      const books = await store.getAllEpubs();
+      set((state) => {
+        state.availableBooks = books.map(({ id, title, created_at }) => ({
+          id,
+          title,
+          timestamp: created_at,
+        }));
+      });
+    },
 
-  closeBook: async () => {
-    const { book } = get();
-    if (book) {
-      book.destroy();
-    }
-    set({ book: null, navigation: [], currentLocation: undefined, scrollPosition: 0, selectedText: null });
-  },
-}));
+    loadBook: async (id: number) => {
+      try {
+        const store = await getStore();
+        const book = await store.getEpub(id);
+        if (book) {
+          const newBook = ePub(book.epub_data);
+          const nav = await newBook.loaded.navigation;
+          const progress = await store.getReadingProgress(id);
+
+          set((state) => {
+            state.book = {
+              id,
+              book: newBook,
+              toc: nav.toc,
+              currentLocation: progress || undefined,
+              selectedText: null
+            };
+          });
+
+        }
+      } catch (error) {
+        console.error('Failed to load book:', error);
+      }
+    },
+
+    handleFileAccepted: async (file: File) => {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const store = await getStore();
+        const title = file.name.replace(/\.epub$/, '');
+        await store.addEpub(title, arrayBuffer);
+        await get().refreshAvailableBooks();
+      } catch (error) {
+        console.error('Error loading EPUB:', error);
+      }
+    },
+
+    deleteBook: async (id: number) => {
+      try {
+        const store = await getStore();
+        await store.deleteEpub(id);
+        await get().refreshAvailableBooks();
+      } catch (error) {
+        console.error('Error deleting EPUB:', error);
+      }
+    },
+
+    closeBook: () => {
+      const { book } = get();
+      if (book) {
+        book.book.destroy();
+      }
+      set((state) => {
+        state.book = null;
+        state.availableBooks = [];
+      });
+    },
+  }))
+);
