@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useEpubStore } from '@/store/epubStore';
 import { Dropzone } from '@/components/ui/dropzone';
@@ -8,17 +8,16 @@ export const EpubLibrary = () => {
   const { handleFileAccepted, availableBooks, loadBook, deleteBook } = useEpubStore();
 
   const router = useRouter();
+  const { book: bookId } = router.query;
 
-  const handleBookClick = (key: string) => {
-    loadBook(key).then(() => {
-      router.push(`/epub?book=${key}`, undefined, { shallow: true });
-    });
+  const handleBookClick = (id: number) => {
+    router.push(`/epub?book=${id}`, undefined, { shallow: true });
   };
 
-  const handleDeleteClick = (e: React.MouseEvent, key: string) => {
+  const handleDeleteClick = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
     if (confirm('Are you sure you want to delete this book?')) {
-      deleteBook(key);
+      deleteBook(id);
     }
   };
 
@@ -30,10 +29,10 @@ export const EpubLibrary = () => {
         <div className="max-w-xl mx-auto">
           <h2 className="text-xl font-semibold mb-4">Your Books</h2>
           <div className="space-y-4">
-            {availableBooks.map(({ key, title, timestamp }) => (
+            {availableBooks.map(({ id, title, timestamp }) => (
               <div
-                key={key}
-                onClick={() => handleBookClick(key)}
+                key={id}
+                onClick={() => handleBookClick(id)}
                 className="bg-gray-50 p-4 rounded-lg cursor-pointer hover:bg-gray-100 flex justify-between items-center"
               >
                 <div>
@@ -43,7 +42,7 @@ export const EpubLibrary = () => {
                   </p>
                 </div>
                 <button
-                  onClick={(e) => handleDeleteClick(e, key)}
+                  onClick={(e) => handleDeleteClick(e, id)}
                   className="text-red-500 hover:text-red-700"
                 >
                   Delete

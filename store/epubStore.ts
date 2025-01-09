@@ -45,18 +45,16 @@ export const useEpubStore = create<EpubStore>()(
     availableBooks: [],
 
 
-    setCurrentLocation: (currentLocation) => {
+    setCurrentLocation: async (currentLocation) => {
       set((state) => {
         if (state.book) {
           state.book.currentLocation = currentLocation;
         }
       });
-      const { book } = get().book || {};
-      if (book && currentLocation) {
-        getStore().then((store) => {
-          store.setReadingProgress(Number(book.key), currentLocation);
-        });
-      }
+
+      const { id } = get().book!;
+      const store = await getStore();
+      store.setReadingProgress(id, currentLocation);
     },
 
     setSelectedText: (selectedText) => {
@@ -83,10 +81,16 @@ export const useEpubStore = create<EpubStore>()(
       try {
         const store = await getStore();
         const book = await store.getEpub(id);
+        const progress = await store.getReadingProgress(id);
+
         if (book) {
-          const newBook = ePub(book.epub_data);
-          const nav = await newBook.loaded.navigation;
-          const progress = await store.getReadingProgress(id);
+          // Uint8Array to ArrayBuffer
+          // IMPORTANT: ePub needs use ArrayBuffer. Uint8Array would cause it not to load, and silently fail.
+          const arrayBuffer = new Uint8Array(book.epub_data).buffer;
+          const newBook = ePub(arrayBuffer);
+          await newBook.ready;
+
+          const nav = newBook.navigation;
 
           set((state) => {
             state.book = {
@@ -97,7 +101,6 @@ export const useEpubStore = create<EpubStore>()(
               selectedText: null
             };
           });
-
         }
       } catch (error) {
         console.error('Failed to load book:', error);

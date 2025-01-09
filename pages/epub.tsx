@@ -23,9 +23,12 @@ export default function EpubPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const bookKey = router.query.book;
-    if (typeof bookKey === 'string' && !book) {
-      loadBook(bookKey);
+    const bookId = router.query.book;
+    if (bookId) {
+      const id = parseInt(bookId as string);
+      if (!isNaN(id)) {
+        loadBook(id);
+      }
     }
   }, [router.query.book, loadBook]);
 
