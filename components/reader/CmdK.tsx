@@ -6,7 +6,8 @@ import { useEpubStore } from '@/store/epubStore';
 import { copyToClipboard } from '@/utils/clipboard';
 
 export function CmdK() {
-  const { selectedText } = useEpubStore();
+  const { reader } = useEpubStore();
+  const selectedText = reader?.selectedText;
   const { onOpen } = useCommandPaletteStore();
 
   useEffect(() => {

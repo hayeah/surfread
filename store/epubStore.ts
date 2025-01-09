@@ -12,16 +12,16 @@ async function getStore(): Promise<EpubPgliteStore> {
 }
 
 
-interface CurrentBook {
+interface ReaderState {
   id: number;
-  book: Book;
+  epub: Book;
   toc: NavItem[];
   currentLocation: string | undefined;
   selectedText: { text: string; context: string; cfi?: string } | null;
 }
 
 interface EpubStore {
-  book: CurrentBook | null;
+  reader: ReaderState | null;
   availableBooks: { id: number; title: string; timestamp: Date }[];
 
   // Action methods
@@ -41,26 +41,26 @@ interface EpubStore {
 //
 export const useEpubStore = create<EpubStore>()(
   immer((set, get): EpubStore => ({
-    book: null,
+    reader: null,
     availableBooks: [],
 
 
     setCurrentLocation: async (currentLocation) => {
       set((state) => {
-        if (state.book) {
-          state.book.currentLocation = currentLocation;
+        if (state.reader) {
+          state.reader.currentLocation = currentLocation;
         }
       });
 
-      const { id } = get().book!;
+      const { id } = get().reader!;
       const store = await getStore();
       store.setReadingProgress(id, currentLocation);
     },
 
     setSelectedText: (selectedText) => {
       set((state) => {
-        if (state.book) {
-          state.book.selectedText = selectedText;
+        if (state.reader) {
+          state.reader.selectedText = selectedText;
         }
       });
     },
@@ -93,9 +93,9 @@ export const useEpubStore = create<EpubStore>()(
           const nav = newBook.navigation;
 
           set((state) => {
-            state.book = {
+            state.reader = {
               id,
-              book: newBook,
+              epub: newBook,
               toc: nav.toc,
               currentLocation: progress || undefined,
               selectedText: null
@@ -130,12 +130,12 @@ export const useEpubStore = create<EpubStore>()(
     },
 
     closeBook: () => {
-      const { book } = get();
+      const { reader: book } = get();
       if (book) {
-        book.book.destroy();
+        book.epub.destroy();
       }
       set((state) => {
-        state.book = null;
+        state.reader = null;
         state.availableBooks = [];
       });
     },

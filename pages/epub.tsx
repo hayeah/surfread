@@ -17,7 +17,7 @@ interface ChatTab {
 }
 
 export default function EpubPage() {
-  const { book, loadBook, refreshAvailableBooks, closeBook } = useEpubStore();
+  const { reader: book, loadBook, refreshAvailableBooks, closeBook } = useEpubStore();
   const [chatTabs, setChatTabs] = useState<ChatTab[]>([]);
 
   const router = useRouter();
