@@ -88,4 +88,16 @@ describe('EpubPgliteStore', () => {
     const progress = await store.getReadingProgress(id);
     expect(progress).toBe(location2);
   });
+
+  it('should fail when writing large data', async () => {
+    const title = 'Large Book';
+    // Generate 30MB of random data
+    const largeData = Buffer.alloc(30 * 1024 * 1024); // 30MB
+    for (let i = 0; i < largeData.length; i++) {
+      largeData[i] = Math.floor(Math.random() * 256);
+    }
+
+    // Attempt to write large data, expect it to fail
+    await expect(store.addEpub(title, largeData))
+  });
 });
