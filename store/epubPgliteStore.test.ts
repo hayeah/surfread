@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { EpubPgliteStore } from './epubPgliteStore';
 
+import 'fake-indexeddb/auto';
 describe('EpubPgliteStore', () => {
   let store: EpubPgliteStore;
 
-  const testData = Buffer.from([1, 2, 3, 4, 5]);
+  const testData = new Uint8Array([1, 2, 3, 4, 5]).buffer;
 
   beforeAll(async () => {
     store = await EpubPgliteStore.init();
@@ -31,7 +32,7 @@ describe('EpubPgliteStore', () => {
 
     expect(epub).not.toBeNull();
     expect(epub!.title).toBe(title);
-    expect(Buffer.compare(epub!.epub_data, testData)).toBe(0);
+    expect(epub!.epub_data).toEqual(testData);
   });
 
   it('should list all epubs', async () => {
@@ -89,15 +90,9 @@ describe('EpubPgliteStore', () => {
     expect(progress).toBe(location2);
   });
 
-  it('should fail when writing large data', async () => {
+  it('should not fail when writing large data', async () => {
     const title = 'Large Book';
-    // Generate 30MB of random data
-    const largeData = Buffer.alloc(30 * 1024 * 1024); // 30MB
-    for (let i = 0; i < largeData.length; i++) {
-      largeData[i] = Math.floor(Math.random() * 256);
-    }
-
-    // Attempt to write large data, expect it to fail
+    const largeData = new ArrayBuffer(30 * 1024 * 1024); // 30MB
     await expect(store.addEpub(title, largeData))
   });
 });

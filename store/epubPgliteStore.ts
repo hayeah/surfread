@@ -1,5 +1,6 @@
 import { PGlite } from '@electric-sql/pglite';
 import { Migrator, Migration } from '../db/Migrator';
+import { BlobStore } from './blobStore';
 
 /**
  * Migration definitions for the epub database schema.
@@ -12,7 +13,6 @@ const MIGRATIONS: Migration[] = [
       CREATE TABLE IF NOT EXISTS books (
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
-        epub_data BYTEA NOT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
@@ -85,12 +85,14 @@ export class EpubPgliteStore {
    */
   async addEpub(title: string, data: ArrayBuffer): Promise<number> {
     const result = await this.db.query<{ id: number }>(
-      `INSERT INTO books (title, epub_data) 
-       VALUES ($1, $2) 
+      `INSERT INTO books (title) 
+       VALUES ($1) 
        RETURNING id`,
-      [title, Buffer.from(data)]
+      [title]
     );
-    return result.rows[0].id;
+    const id = result.rows[0].id;
+    await BlobStore.singleton().then(store => store.put(id.toString(), data));
+    return id;
   }
 
   /**
@@ -99,11 +101,16 @@ export class EpubPgliteStore {
    * @returns Promise resolving to the book data or null if not found.
    */
   async getEpub(id: number): Promise<EpubBook | null> {
-    const result = await this.db.query<EpubBook>(
-      'SELECT id, title, epub_data FROM books WHERE id = $1',
+    const result = await this.db.query<Omit<EpubBook, 'epub_data'>>(
+      'SELECT id, title FROM books WHERE id = $1',
       [id]
     );
-    return result.rows[0] || null;
+    const book = result.rows[0];
+    if (!book) return null;
+
+    const store = await BlobStore.singleton();
+    const epub_data = (await store.get(id.toString()))!;
+    return { ...book, epub_data };
   }
 
   /**
@@ -128,6 +135,9 @@ export class EpubPgliteStore {
       await tx.query('DELETE FROM reading_progress WHERE book_id = $1', [id]);
       await tx.query('DELETE FROM books WHERE id = $1', [id]);
     });
+
+    const store = await BlobStore.singleton();
+    await store.delete(id.toString());
   }
 
   /**
@@ -161,13 +171,13 @@ export class EpubPgliteStore {
   }
 }
 
-export type EpubBook = {
+export interface EpubBook {
   id: number;
   title: string;
-  epub_data: Buffer;
+  epub_data: ArrayBuffer;
 }
 
-export type EpubMetadata = {
+export interface EpubMetadata {
   id: number;
   title: string;
   created_at: Date;
