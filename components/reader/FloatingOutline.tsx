@@ -8,9 +8,11 @@ interface FloatingOutlineProps {
 }
 
 export const FloatingOutline: React.FC<FloatingOutlineProps> = ({ isOpen, onClose }) => {
-  const { reader: book, setCurrentLocation, closeBook } = useEpubStore();
+  const { reader, setCurrentLocation, closeBook } = useEpubStore();
 
   if (!isOpen) return null;
+
+  const { flatTOC } = reader!;
 
   return (
     <div className="fixed left-16 top-4 z-50 w-80 bg-white rounded-lg shadow-lg border outline-panel">
@@ -26,7 +28,7 @@ export const FloatingOutline: React.FC<FloatingOutlineProps> = ({ isOpen, onClos
         </button>
       </div>
       <div className="max-h-[80vh] overflow-y-auto px-4">
-        <Outline toc={book?.epub.navigation?.toc || []} onChapterSelect={(location) => {
+        <Outline toc={flatTOC} onChapterSelect={(location) => {
           setCurrentLocation(location);
           onClose();
         }} />

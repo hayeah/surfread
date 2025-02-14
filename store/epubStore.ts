@@ -15,9 +15,37 @@ interface ReaderState {
   bookID: number;
   epub: Book;
   toc: NavItem[];
+  flatTOC: FlatNavItem[];
   currentLocation: string | undefined;
   selectedText: { text: string; context: string; cfi?: string } | null;
 }
+
+
+export interface FlatNavItem extends NavItem {
+  level: number;
+  parent?: string;
+}
+
+export type FlatTOC = FlatNavItem[];
+
+function flattenTOC(items: NavItem[], level = 0, parent?: string): FlatNavItem[] {
+  return items.reduce<FlatNavItem[]>((acc, item) => {
+    const flatItem: FlatNavItem = {
+      ...item,
+      level,
+      parent,
+    };
+
+    acc.push(flatItem);
+
+    if (item.subitems && item.subitems.length > 0) {
+      acc.push(...flattenTOC(item.subitems, level + 1, item.id));
+    }
+
+    return acc;
+  }, []);
+}
+
 
 interface EpubStore {
   reader: ReaderState | null;
@@ -106,6 +134,7 @@ export const useEpubStore = create<EpubStore>()(
               bookID: id,
               epub: newBook,
               toc: nav.toc,
+              flatTOC: flattenTOC(nav.toc),
               currentLocation: progress || undefined,
               selectedText: null
             };

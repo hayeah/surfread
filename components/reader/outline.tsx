@@ -1,8 +1,8 @@
 import React from 'react';
-import { NavItem } from 'epubjs';
+import { FlatTOC } from '../../store/epubStore';
 
 interface OutlineProps {
-  toc: NavItem[];
+  toc: FlatTOC;
   onChapterSelect: (href: string) => void;
 }
 
@@ -10,38 +10,17 @@ export function Outline({ toc, onChapterSelect }: OutlineProps) {
   return (
     <div className="h-full">
       <nav>
-        {toc.map((chapter, index) => {
-          const hasSubitems = chapter.subitems && chapter.subitems.length > 0;
-
-          if (hasSubitems) {
-            return (
-              <div key={index}>
-                <div className="py-2 font-bold text-gray-700">
-                  {chapter.label}
-                </div>
-                {chapter.subitems!.map((subitem, subIndex) => (
-                  <button
-                    key={`${index}-${subIndex}`}
-                    onClick={() => onChapterSelect(subitem.href)}
-                    className="block w-full text-left py-2 pl-2 pr-4 hover:bg-gray-100 rounded text-sm"
-                  >
-                    {subitem.label}
-                  </button>
-                ))}
-              </div>
-            );
-          }
-
-          return (
-            <button
-              key={index}
-              onClick={() => onChapterSelect(chapter.href)}
-              className="block w-full text-left py-2 hover:bg-gray-100 rounded"
-            >
-              {chapter.label}
-            </button>
-          );
-        })}
+        {toc.map((item, index) => (
+          <button
+            key={index}
+            onClick={() => onChapterSelect(item.href)}
+            className={`block w-full text-left py-2 hover:bg-gray-100 rounded ${item.level === 0 ? 'font-bold' : ''
+              }`}
+            style={{ paddingLeft: `${item.level * 1}rem` }}
+          >
+            {item.label}
+          </button>
+        ))}
       </nav>
     </div>
   );
