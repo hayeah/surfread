@@ -6,10 +6,10 @@ import { FloatingOutline } from '@/components/reader/FloatingOutline';
 
 export function EpubReader() {
   const { reader: book } = useEpubStore();
-  const { epub: epub, currentLocation, toc: navigation } = book!;
+  const { epub: epub, currentLocation, flatTOC } = book!;
 
 
-  console.log(navigation)
+  console.log(flatTOC)
 
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
 
@@ -53,7 +53,6 @@ export function EpubReader() {
       <Viewer
         book={epub}
         currentLocation={currentLocation}
-        navigation={navigation}
       />
     </div >
   );

@@ -7,14 +7,13 @@ import { getSelectionContext } from './getSelectionContext';
 interface ViewerProps {
   book: Book;
   currentLocation?: string;
-  navigation: NavItem[];
 }
 
-export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
+export function Viewer({ book, currentLocation }: ViewerProps) {
+  const { setCurrentLocation, setSelectedText, saveProgress, goToNextNavItem } = useEpubStore();
   const viewerRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
   const displayPromiseRef = useRef<Promise<any> | null>(null);
-  const { setCurrentLocation, setSelectedText, saveProgress } = useEpubStore();
 
   useEffect(() => {
     if (viewerRef.current && book) {
@@ -91,27 +90,12 @@ export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
     }
   }, [currentLocation]);
 
-  const goToNextChapter = () => {
-    if (!renditionRef.current || !currentLocation) return;
-
-    // Find the current chapter in navigation
-    const currentIndex = navigation.findIndex(item => {
-      return renditionRef.current?.location?.start.href.includes(item.href);
-    });
-
-    // If we found current chapter and there's a next chapter
-    if (currentIndex !== -1 && currentIndex < navigation.length - 1) {
-      const nextChapter = navigation[currentIndex + 1];
-      renditionRef.current.display(nextChapter.href);
-    }
-  };
-
   return (
-    <div className="h-full w-full relative">
+    <div className="relative h-full">
       {/* IMPORTANT: The width and height must be set to 100%, else locationChanged event will not be triggered */}
       <div className="h-full w-full" ref={viewerRef}></div>
       <button
-        onClick={goToNextChapter}
+        onClick={goToNextNavItem}
         className="fixed bottom-8 right-8 z-50 p-3 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
         title="Next Chapter"
       >
