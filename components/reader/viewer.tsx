@@ -10,7 +10,7 @@ interface ViewerProps {
   navigation: NavItem[];
 }
 
-export function Viewer({ book, currentLocation }: ViewerProps) {
+export function Viewer({ book, currentLocation, navigation }: ViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
   const displayPromiseRef = useRef<Promise<any> | null>(null);
@@ -91,8 +91,34 @@ export function Viewer({ book, currentLocation }: ViewerProps) {
     }
   }, [currentLocation]);
 
+  const goToNextChapter = () => {
+    if (!renditionRef.current || !currentLocation) return;
+
+    // Find the current chapter in navigation
+    const currentIndex = navigation.findIndex(item => {
+      return renditionRef.current?.location?.start.href.includes(item.href);
+    });
+
+    // If we found current chapter and there's a next chapter
+    if (currentIndex !== -1 && currentIndex < navigation.length - 1) {
+      const nextChapter = navigation[currentIndex + 1];
+      renditionRef.current.display(nextChapter.href);
+    }
+  };
+
   return (
-    // IMPORTANT: The width and height must be set to 100%, else locationChanged event will not be triggered
-    <div className="h-full w-full" ref={viewerRef}></div>
+    <div className="h-full w-full relative">
+      {/* IMPORTANT: The width and height must be set to 100%, else locationChanged event will not be triggered */}
+      <div className="h-full w-full" ref={viewerRef}></div>
+      <button
+        onClick={goToNextChapter}
+        className="fixed bottom-8 right-8 z-50 p-3 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+        title="Next Chapter"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
   );
 }
