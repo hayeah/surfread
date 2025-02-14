@@ -61,6 +61,47 @@ interface EpubStore {
   refreshAvailableBooks(): Promise<void>;
   deleteBook(id: number): Promise<void>;
   goToNextNavItem(): Promise<void>;
+  goToPreviousNavItem(): Promise<void>;
+}
+
+// Helper function to find the current nav item index
+function findCurrentNavItemIndex(flatTOC: FlatNavItem[], currentHref: string | undefined): number {
+  if (!currentHref) return -1;
+
+  // The currentHref might contain the full path, so we need to get just the filename part
+  const currentPathParts = currentHref.split('/');
+  const currentFile = currentPathParts[currentPathParts.length - 1];
+  // Remove any fragment identifier (#) from the current file
+  const currentFileBase = currentFile.split('#')[0];
+
+  // Find current index in flatTOC by matching just the filename part, ignoring fragment identifiers
+  return flatTOC.findIndex(item => {
+    const itemPathParts = item.href.split('/');
+    const itemFile = itemPathParts[itemPathParts.length - 1];
+    // Remove any fragment identifier (#) from the item file
+    const itemFileBase = itemFile.split('#')[0];
+    return currentFileBase === itemFileBase;
+  });
+}
+
+type Direction = 'next' | 'previous';
+
+async function gotoNavItem(reader: ReaderState, direction: Direction): Promise<string | undefined> {
+  if (!reader || !reader.epub || !reader.currentLocation) return;
+
+  const currentIndex = findCurrentNavItemIndex(
+    reader.flatTOC,
+    reader.epub.rendition.location?.start.href
+  );
+
+  const nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+
+  // Check bounds
+  if (nextIndex < 0 || nextIndex >= reader.flatTOC.length) return;
+
+  const targetItem = reader.flatTOC[nextIndex];
+  await reader.epub.rendition.display(targetItem.href);
+  return targetItem.href;
 }
 
 //
@@ -177,37 +218,26 @@ export const useEpubStore = create<EpubStore>()(
       });
     },
 
+    goToPreviousNavItem: async () => {
+      const state = get();
+      const { reader } = state;
+      if (!reader) return;
+
+      const nextHref = await gotoNavItem(reader, 'previous');
+      if (nextHref) {
+        state.setCurrentLocation(nextHref);
+      }
+    },
+
     goToNextNavItem: async () => {
       const state = get();
       const { reader } = state;
-      if (!reader || !reader.epub || !reader.currentLocation) return;
+      if (!reader) return;
 
-      const currentHref = reader.epub.rendition.location?.start.href;
-      if (!currentHref) return;
-
-
-      // The currentHref might contain the full path, so we need to get just the filename part
-      const currentPathParts = currentHref.split('/');
-      const currentFile = currentPathParts[currentPathParts.length - 1];
-      // Remove any fragment identifier (#) from the current file
-      const currentFileBase = currentFile.split('#')[0];
-
-      // Find current index in flatTOC by matching just the filename part, ignoring fragment identifiers
-      const currentIndex = reader.flatTOC.findIndex(item => {
-        const itemPathParts = item.href.split('/');
-        const itemFile = itemPathParts[itemPathParts.length - 1];
-        // Remove any fragment identifier (#) from the item file
-        const itemFileBase = itemFile.split('#')[0];
-        return currentFileBase === itemFileBase;
-      });
-
-      if (currentIndex === -1 || currentIndex === reader.flatTOC.length - 1) return;
-
-      // Get next nav item and navigate to it
-      const nextItem = reader.flatTOC[currentIndex + 1];
-
-      await reader.epub.rendition.display(nextItem.href);
-      state.setCurrentLocation(nextItem.href);
+      const nextHref = await gotoNavItem(reader, 'next');
+      if (nextHref) {
+        state.setCurrentLocation(nextHref);
+      }
     },
   }))
 );
