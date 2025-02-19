@@ -8,9 +8,6 @@ export function EpubReader() {
   const { reader: book } = useEpubStore();
   const { epub: epub, currentLocation, flatTOC } = book!;
 
-
-  console.log(flatTOC)
-
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
 
   const handleCloseOutline = useCallback(() => {
