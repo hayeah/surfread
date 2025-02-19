@@ -28,7 +28,7 @@ export const EpubLibrary = () => {
       {availableBooks.length > 0 && (
         <div className="max-w-xl mx-auto">
           <h2 className="text-xl font-semibold mb-4">Your Books</h2>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 pb-8">
             {availableBooks.map(({ id, title, timestamp }) => (
               <div
                 key={id}
