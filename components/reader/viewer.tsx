@@ -4,6 +4,7 @@ import debounce from 'lodash/debounce';
 import { useEpubStore } from '@/store/epubStore';
 import { getSelectionContext } from './getSelectionContext';
 
+
 interface ViewerProps {
   book: Book;
   currentLocation?: string;
@@ -22,13 +23,35 @@ export function Viewer({ book, currentLocation }: ViewerProps) {
         height: '100%',
         spread: 'none',
         flow: 'scrolled-doc',
+        // view: 'inline',
       });
 
+      // Epub.js enforces rigid layout for iframes and sets inline body styles.
+      //   - It explicitly sets something like `padding: 0 (width / 12)px` on the <body>.
+      //   - Bottom padding on <body> gets ignored because epub.js measures content height
+      //     and fixes the iframe size accordingly, clipping any extra space.
+      // Hence, to create bottom spacing in scrolled-doc flow, we target the last child
+      //   and add padding to it. That way the actual content's height increases and 
+      //   epub.js won't clip it.
       renditionRef.current.themes.default({
         'body': {
           'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           'font-size': '16px',
           'line-height': '1.6',
+          // 'color': 'red',
+
+          'padding': '0px 10px 0px 10px  !important',
+
+          // This doesn't work
+          // 'padding-bottom': '300px !important',
+        },
+
+        "p": {
+          'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        },
+
+        'body > *:last-child': {
+          'padding-bottom': '100px !important'
         },
       });
 
