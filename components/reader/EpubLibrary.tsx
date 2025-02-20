@@ -75,22 +75,28 @@ export const EpubLibrary = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <Dropzone onFileAccepted={handleFileAccepted} className="max-w-xl mx-auto mb-8" />
+    <div className="flex flex-col h-screen">
+      {/* Fixed-height top section */}
+      <div className="p-4 flex-none">
+        <Dropzone onFileAccepted={handleFileAccepted} className="max-w-xl mx-auto mb-4" />
 
-      {availableBooks.length > 0 && (
-        <div className="max-w-xl mx-auto">
-          <h2 className="text-xl font-semibold mb-4">Your Books</h2>
+        {availableBooks.length > 0 && (
+          <div className="max-w-xl mx-auto">
+            <input
+              type="text"
+              placeholder="Search books..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full mb-2 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        )}
+      </div>
 
-          <input
-            type="text"
-            placeholder="Search books..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full mb-4 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-
-          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 pb-8">
+      {/* Remaining space -> scrollable list */}
+      <div className="p-4 flex-grow overflow-y-auto">
+        {availableBooks.length > 0 && (
+          <div className="max-w-xl mx-auto space-y-4">
             {filteredBooks.map(({ id, title, timestamp, highlightInfo }) => (
               <div
                 key={id}
@@ -114,8 +120,8 @@ export const EpubLibrary = () => {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
