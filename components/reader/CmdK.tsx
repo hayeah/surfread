@@ -65,9 +65,9 @@ ${selectedText.context}
             const prompt = `
 Distill the given text content in a more **engaging and readable style** (similar to ChatGPT LISTICLE responses).
 
-- Be concise, but don't sacrifice clarity. 
+- Be concise, but don't sacrifice clarity.
 - Start with a **clear general overview**.
-- Break down the main ideas into **specific points** for better readability. 
+- Break down the main ideas into **specific points** for better readability.
 - Use list nesting for better visual structure. Allow deep nestings.
 - Write a style that's clear, erudite, assuming a good education, not dumbed down.
 

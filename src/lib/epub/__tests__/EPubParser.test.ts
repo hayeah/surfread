@@ -16,7 +16,7 @@ describe('EPubParser', () => {
     it('should parse metadata from alice.epub', async () => {
       const parser = await EPubParser.load('test/fixtures/alice.epub');
       const metadata = await parser.metadata();
-      
+
       expect(metadata).toEqual({
         title: "Alice's Adventures in Wonderland",
         author: "Lewis Carroll",

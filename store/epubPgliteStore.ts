@@ -85,8 +85,8 @@ export class EpubPgliteStore {
    */
   async addEpub(title: string, data: ArrayBuffer): Promise<number> {
     const result = await this.db.query<{ id: number }>(
-      `INSERT INTO books (title) 
-       VALUES ($1) 
+      `INSERT INTO books (title)
+       VALUES ($1)
        RETURNING id`,
       [title]
     );
@@ -150,7 +150,7 @@ export class EpubPgliteStore {
     await this.db.query(
       `INSERT INTO reading_progress (book_id, session_key, location)
        VALUES ($1, $2, $3)
-       ON CONFLICT (book_id, session_key) 
+       ON CONFLICT (book_id, session_key)
        DO UPDATE SET location = $3, updated_at = CURRENT_TIMESTAMP`,
       [bookId, sessionKey, location]
     );

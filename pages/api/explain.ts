@@ -17,15 +17,15 @@ export default async function handler(
 
   try {
     const result = await getExplanation(text, context || '');
-    
+
     if (result.error) {
       return res.status(500).json({ error: result.error });
     }
 
     return res.status(200).json({ explanation: result.explanation });
   } catch (error) {
-    return res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Failed to get explanation' 
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : 'Failed to get explanation'
     });
   }
 }

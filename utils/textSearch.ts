@@ -23,26 +23,26 @@ type SearchResult = {
 
 /**
  * Performs a case-insensitive prefix search on space-separated words.
- * 
+ *
  * This function searches for each token from the query within the title's words,
  * requiring that:
  * 1. Each token matches as a prefix of some word
  * 2. Matches must be found in order (no backtracking)
  * 3. Once a word is matched, subsequent tokens must match later words
- * 
+ *
  * @param query - Space-separated search tokens (e.g., "coo ess")
  * @param title - The target text to search within (e.g., "cool essays")
  * @returns A SearchResult object containing:
  *          - matched: true if all tokens were matched in order
  *          - highlightInfo: array of HighlightSegment objects for each match
- * 
+ *
  * @example
  * // Returns { matched: true, highlightInfo: [
  * //   { wordIndex: 0, matchStart: 0, matchLength: 3 },  // 'coo' in "cool"
  * //   { wordIndex: 1, matchStart: 0, matchLength: 3 }   // 'ess' in "essays"
  * // ]}
  * prefixSearch("coo ess", "cool essays")
- * 
+ *
  * @example
  * // Returns { matched: false, highlightInfo: [] }
  * prefixSearch("essay cool", "cool essays")  // Wrong order

@@ -14,7 +14,7 @@ const DrawerButton: React.FC<DrawerButtonProps> = ({
   className = "",
 }) => {
   const isLeft = position === "left";
-  
+
   return (
     <button
       onClick={onClick}

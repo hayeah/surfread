@@ -15,7 +15,7 @@
  * // Basic usage
  * function Chat() {
  *   const { messages, sendMessage, isLoading } = useChat();
- *   
+ *
  *   return (
  *     <div>
  *       {messages.map((msg, i) => (
@@ -27,12 +27,12 @@
  *     </div>
  *   );
  * }
- * 
+ *
  * // Multiple independent chats
  * function MultiChat() {
  *   const chat1 = useChat();
  *   const chat2 = useChat();
- *   
+ *
  *   return (
  *     <div>
  *       <ChatBox {...chat1} />

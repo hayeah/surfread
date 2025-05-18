@@ -15,7 +15,7 @@ test('SurfRead component test', async () => {
     return (
       <div>
         <h1>SurfRead Component</h1>
-        <input 
+        <input
           aria-label="search"
           placeholder="Search..."
           type="text"
@@ -35,7 +35,7 @@ test('SurfRead component test', async () => {
 
   // Fill the search input
   await screen.getByLabelText('search').fill('test query');
-  
+
   // Check that the input value was updated
   await expect.element(screen.getByLabelText('search')).toHaveValue('test query');
 });

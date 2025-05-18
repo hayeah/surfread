@@ -10,4 +10,4 @@ export const useCommandPaletteStore = create<CommandPaletteState>((set) => ({
   isOpen: false,
   onClose: () => set({ isOpen: false }),
   onOpen: () => set({ isOpen: true }),
-})); 
+}));

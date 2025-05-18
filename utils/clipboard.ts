@@ -4,4 +4,4 @@ export const copyToClipboard = async (text: string) => {
   } catch (err) {
     console.error('Failed to copy text:', err);
   }
-}; 
+};

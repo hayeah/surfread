@@ -55,7 +55,7 @@ function RightSidebar({ book, scrollPosition, selectedText }: RightSidebarProps)
     }
 
     async function getExplanation() {
-      // disable for now 
+      // disable for now
       return
       if (!selectedText) {
         return;

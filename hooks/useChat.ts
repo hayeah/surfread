@@ -1,6 +1,6 @@
 /**
  * A custom hook that manages chat state and message handling.
- * 
+ *
  * Features:
  * - Manages message history
  * - Handles message sending with streaming responses

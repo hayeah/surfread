@@ -53,10 +53,10 @@ export async function extractZip(zipPath: string, targetDir: string): Promise<vo
     while ((entry = await nextEntry()) !== null) {
       const fullPath = path.join(targetDir, entry.fileName);
       const directory = path.dirname(fullPath);
-      
+
       // Create directory if it doesn't exist
       await fs.mkdir(directory, { recursive: true });
-      
+
       if (!entry.fileName.endsWith('/')) {
         const readStream = await openReadStream(entry);
         const writeStream = createWriteStream(fullPath);

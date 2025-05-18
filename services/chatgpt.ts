@@ -13,7 +13,7 @@ export async function getExplanation(
   context: string
 ): Promise<ExplanationResponse> {
   const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-  
+
   if (!apiKey) {
     return {
       explanation: "",
@@ -46,7 +46,7 @@ export async function getExplanation(
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.error?.message || "Failed to get explanation");
     }

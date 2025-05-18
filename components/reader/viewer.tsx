@@ -31,7 +31,7 @@ export function Viewer({ book, currentLocation }: ViewerProps) {
       //   - Bottom padding on <body> gets ignored because epub.js measures content height
       //     and fixes the iframe size accordingly, clipping any extra space.
       // Hence, to create bottom spacing in scrolled-doc flow, we target the last child
-      //   and add padding to it. That way the actual content's height increases and 
+      //   and add padding to it. That way the actual content's height increases and
       //   epub.js won't clip it.
       renditionRef.current.themes.default({
         'body': {
