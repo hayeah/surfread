@@ -37,10 +37,9 @@ export function Viewer({ book, currentLocation }: ViewerProps) {
         'body': {
           'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           'font-size': '16px',
-          'line-height': '1.6',
           // 'color': 'red',
 
-          'padding': '0px 10px 0px 10px  !important',
+          'padding': '0px 1empx 0px 1em  !important',
 
           // This doesn't work
           // 'padding-bottom': '300px !important',
@@ -48,6 +47,8 @@ export function Viewer({ book, currentLocation }: ViewerProps) {
 
         "p": {
           'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          'text-align': 'start !important',
+          'line-height': '1.5',
         },
 
         'body > *:last-child': {
