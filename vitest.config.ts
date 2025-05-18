@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'jsdom',
+    // Removed jsdom environment since we're using real browsers
     browser: {
       enabled: true,
       provider: 'playwright', // Using Playwright as you already have it installed
